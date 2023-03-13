@@ -1,0 +1,1 @@
+Se ha cambiado la variable "javacchome" de build.xml para indicar la ruta local de instalación de javacc. Habrá que cambiarlo a la de hendrix para la entrega

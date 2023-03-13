@@ -1,0 +1,575 @@
+//*****************************************************************
+// File:   clike.jj
+// Author: Procesadores de Lenguajes-University of Zaragoza
+// Date:   noviembre 2022
+// Coms:   compilar mediante "ant"
+//*****************************************************************
+
+
+
+options {
+ 	IGNORE_CASE = false;
+ 	COMMON_TOKEN_ACTION = false;
+ 	// DEBUG_PARSER = true;
+ 	// ERROR_REPORTING = false;
+}
+
+PARSER_BEGIN(clike)
+
+package traductor;
+import java.io.*;
+//...
+
+public class clike {
+	//...
+	
+    public static void main(String[] args) {
+    	clike parser = null;
+    	
+    	try {
+	    	if(args.length == 0) {
+				parser = new clike(System.in);
+			}
+			else {
+	            parser = new clike(new java.io.FileInputStream(args[0]));			// 0 puede que sea el nombre del propio ejecutable, cuidado
+			}
+			//Programa es el símbolo inicial de la gramática
+			parser.Programa();
+			//...
+			System.out.println("***** Análisis terminado con éxito *****");
+		}
+		catch (java.io.FileNotFoundException e) {
+			System.err.println ("Fichero " + args[0] + " no encontrado.");
+		}
+		catch (TokenMgrError e) {
+        	System.err.println("LEX_ERROR: " + e.getMessage());
+        }
+		catch (ParseException e) {
+			System.err.println("PARSE_ERROR: " + e.getMessage());
+		}
+		catch (Exception e) {
+			System.err.println("ERROR: " + e.getMessage());
+		}
+        //...
+    }
+}
+PARSER_END(clike)
+
+SKIP : // Carácteres que debe detectar pero no generar token
+{
+	" "
+|	"\t"
+|	"\n"
+|	"\r" 
+}
+
+TOKEN : {
+ 	< #mLETTER: ["a"-"z"] >
+|	< #MLETTER: ["A"-"Z"] >
+|	< #LETTER:	(<mLETTER> | <MLETTER>) >
+|	< #DIGIT: 	["0"-"9"] >
+|	< #NUMBER:	(<DIGIT>)+ >
+|	< #IDCHAR:	(<LETTER> | <DIGIT> | "_") >
+}
+
+TOKEN : {
+	< tIBLOQUE:	"{"> {
+							System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							System.out.println("inicio de bloque" + "\"" + matchedToken + "\"");
+						}
+|	< tFBLOQUE:	"}"> {
+							System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							System.out.println("fin de bloque" + "\"" + matchedToken + "\"");
+						}
+|	< tAP:	"("> {
+							System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							System.out.println("inicio de parentesis" + "\"" + matchedToken + "\"");
+						}
+|	< tCP:	")"> {
+							System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							System.out.println("cierre de parentesis" + "\"" + matchedToken + "\"");
+						}
+|	< tACOR:	"["> {
+							System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							System.out.println("inicio de cochete" + "\"" + matchedToken + "\"");
+						}
+|	< tCCOR:	"]"> {
+							System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							System.out.println("cierre de corchete" + "\"" + matchedToken + "\"");
+						}
+|	< tREFER:	"&"> {
+							System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							System.out.println("operador de referencia" + "\"" + matchedToken + "\"");
+						}
+|	< tPC:		";"> {
+							System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							System.out.println("caracter de fin de linea" + "\"" + matchedToken + "\"");
+						}
+|	< tASSIGN:	"="> {
+							System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							System.out.println("operador asignacion" + "\"" + matchedToken + "\"");
+						}
+|	< tMAS:		"+"> {
+							System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							System.out.println("operador suma" + "\"" + matchedToken + "\"");
+						}
+|	< tMENOS:	"-"> {
+							System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							System.out.println("operador resta" + "\"" + matchedToken + "\"");
+						}
+|	< tPROD:	"*"> {
+							System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							System.out.println("operador multiplicacion" + "\"" + matchedToken + "\"");
+						}
+|	< tDIV:		"/"> {
+							System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							System.out.println("operador division" + "\"" + matchedToken + "\"");
+						}
+|	< tMOD:		"%"> {
+							System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							System.out.println("operador modulo" + "\"" + matchedToken + "\"");
+						}
+|	< tMEN:	"<"> {
+							System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							System.out.println("variable string" + "\"" + matchedToken + "\"");
+						}
+|	< tMAY:	">"> {
+							System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							System.out.println("variable string" + "\"" + matchedToken + "\"");
+						}
+|	< tMENI:	"<="> {
+							System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							System.out.println("variable string" + "\"" + matchedToken + "\"");
+						}
+|	< tMAYI:	">="> {
+							System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							System.out.println("variable string" + "\"" + matchedToken + "\"");
+						}
+|	< tDIF:		"!="> {
+							System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							System.out.println("operador distinto" + "\"" + matchedToken + "\"");
+						}
+|	< tIG:		"=="> {
+							System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							System.out.println("operador igual" + "\"" + matchedToken + "\"");
+						}
+|	< tOR:		"||"> {
+							System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							System.out.println("operador or exclusivo" + "\"" + matchedToken + "\"");
+						}
+|	< tAND:		"&&"> {
+							System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							System.out.println("operador and exclusivo" + "\"" + matchedToken + "\"");
+						}
+|	< tNOT:		"!"> {
+							System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							System.out.println("operador negar" + "\"" + matchedToken + "\"");
+						}
+|	< tWHILE:	"while"> {
+							System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							System.out.println("token" + "\"" + matchedToken + "\"");
+						}
+|	< tIF:	"if"> {
+							System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							System.out.println("token" + "\"" + matchedToken + "\"");
+						}
+|	< tELSE: "else"> {
+							System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							System.out.println("token" + "\"" + matchedToken + "\"");
+						}
+}
+
+TOKEN : {
+	< tBOOL: 	"bool" > {
+							System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							System.out.println("token" + "\"" + matchedToken + "\"");
+						}
+|	< tCHAR: 	"char" > {
+							System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							System.out.println("token" + "\"" + matchedToken + "\"");
+						}
+|	< tINT:		"int" > {
+							System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							System.out.println("token" + "\"" + matchedToken + "\"");
+						}
+| 	< tFALSE:	"false" > {
+							System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							System.out.println("false" + "\"" + matchedToken + "\"");
+						}
+|	< tTRUE:	"true" > {
+							System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							System.out.println("true" + "\"" + matchedToken + "\"");
+						}
+|	< tCONST:	"'"(~[])"'" > {
+							System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							System.out.println("constante" + "\"" + matchedToken + "\"");
+						}
+|	< tVOID: 	"void" > {
+							System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							System.out.println("procedimiento" + "\"" + matchedToken + "\"");
+						}
+|	< tPRINT: 	"print" > {
+							System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							System.out.println("función" + "\"" + matchedToken + "\"");
+						}
+|	< tPRINTLN: "println" > {
+							System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							System.out.println("función" + "\"" + matchedToken + "\"");
+						}
+|	< tREAD: 	"read" > {
+							System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							System.out.println("función" + "\"" + matchedToken + "\"");
+						}
+|	< tREADLN: 	"readln" > {
+							System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							System.out.println("función" + "\"" + matchedToken + "\"");
+						}
+|	< tRETURN: 	"return" > {
+							System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							System.out.println("token" + "\"" + matchedToken + "\"");
+						}
+|	< tINT2CHAR: 	"int2char" > {
+							System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							System.out.println("función" + "\"" + matchedToken + "\"");
+						}
+|	< tCHAR2INT: 	"char2int" > {
+							System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							System.out.println("función " + "\"" + matchedToken + "\"");
+						}
+|	< tID:		(<IDCHAR>)+ > {
+							System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							System.out.println("identificador" + "\"" + matchedToken + "\"");
+						}
+|	< tCONST_STRING:	"\"" ((~["\"" , "\n"]) | "\"\"")* "\"" > {
+							System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							System.out.println("constante string" + "\"" + matchedToken + "\"");
+						}
+|	< tCOMMA:	"," > {
+							System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							System.out.println("operador concatenación" + "\"" + matchedToken + "\"");
+						}
+|	< tCONST_INT:	(<NUMBER>) > {
+							System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							System.out.println("constante entera" + "\"" + matchedToken + "\"");
+						}
+|	< tCONST_CHAR:		"\"" ((~["\"" , "\n"]) | "\"\"") "\"" > {
+							System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							System.out.println("constante char" + "\"" + matchedToken + "\"");
+						}
+|	<tEPSILON : 		"" > {
+							System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							System.out.println("epsilon" + "\"" + matchedToken + "\"");
+						}
+
+}
+
+SPECIAL_TOKEN : {
+	<tBASURA : ~[] >
+	{
+		System.out.println("ERROR: Caracter extraño "+ matchedToken+", reemplazando por un espacio");
+		matchedToken.image = " ";
+	}
+|	< tCOMM: 	"//"(~["\n"])*> {
+		System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+		System.out.println("comentario" + "\"" + matchedToken + "\"");
+	}
+
+}
+
+//------------ Símbolo inicial de la gramática. Para análisis léxico no hace falta más
+void Programa() : 
+{}
+{
+	( declaracion() )+
+	< EOF >
+}
+
+void declaracion() :
+{System.out.println("declaracion");}
+{
+	LOOKAHEAD(3)
+	declaracion_variables()
+|	declaracion_func_proc()
+}
+
+void declaracion_variables() :
+{System.out.println("declaracion variables");}
+{
+	tipo()
+	ids()
+	<tPC>
+}
+
+void ids() :
+{}
+{
+	LOOKAHEAD(2)
+	< tID >
+|	< tID > < tCOMMA > ids()
+}
+
+void declaracion_func_proc() :
+{System.out.println("declaracion procedimiento");}
+{
+	tipo()
+	< tID >
+	< tAP >
+	(parametros())?
+	< tCP >
+}
+
+void parametros() :
+{}
+{
+	LOOKAHEAD(2)
+	parametro()
+|	parametro() < tCOMMA > parametros()
+}
+
+void parametro() :
+{}
+{
+	LOOKAHEAD(2)
+	tipo() < tID >
+	|
+	tipo() < tREFER > < tID >
+}
+
+void instruccion() :
+{}
+{
+	inst_leer() < tPC >
+|	inst_leer_linea() < tPC > 
+|	LOOKAHEAD(3) inst_escribir() < tPC > 
+|	inst_escribir_linea() < tPC > 
+// Para evitar ambigüedad con invocación de función
+| 	LOOKAHEAD(2) inst_invoc_proc() < tPC > 	
+|	inst_asignacion() < tPC > 
+|	inst_seleccion()
+|	inst_iteracion()
+|	inst_return() < tPC > 
+}
+
+void inst_leer() :
+{}
+{
+	< tREAD >
+	< tAP >
+	< tID >
+	( < tCOMMA > < tID > )*
+	< tCP >
+}
+
+void inst_leer_linea() :
+{}
+{
+	< tREADLN >
+	< tAP >
+	( < tID > )?
+	( < tCOMMA > < tID > )*
+	< tCP >
+}
+
+void inst_escribir() :
+{}
+{
+	< tPRINT >
+	< tAP >
+	argumentos()
+	< tCP >
+}
+
+void inst_escribir_linea() :
+{}
+{
+	< tPRINT >
+	< tAP >
+	argumentos()
+	< tCP >
+}
+
+void argumentos() :
+{}
+{
+	expresion() (< tCOMMA > expresion())*
+| 	< tEPSILON >
+}
+
+void inst_asignacion() :
+{}
+{
+	asignable()
+	< tASSIGN >
+	expresion()
+}
+
+void asignable() :
+{}
+{
+	< tID >
+}
+
+void inst_seleccion() :
+{}
+{
+	< tIF > < tAP > expresion() < tCP > bloque()
+	bloque_else_ifs()
+	( < tELSE > bloque() )?
+
+}
+
+void bloque_else_ifs():
+{}
+{
+	< tELSE > < tIF > < tAP > expresion() < tCP > 
+	bloque() 
+	bloque_else_ifs()
+|	< tEPSILON >
+
+}
+
+void inst_iteracion() :
+{}
+{
+	< tWHILE > < tAP > expresion() < tCP > bloque()
+}
+
+void bloque() :
+{}
+{
+	< tIBLOQUE >
+	(instruccion())*
+	< tFBLOQUE >
+}
+
+void inst_return() :
+{}
+{
+	< tRETURN > expresion()
+}
+
+void inst_invoc_proc() :
+{}
+{
+	< tID >
+	< tAP >
+	argumentos()
+	< tCP >
+}
+
+void operador_not() :
+{}
+{
+	< tNOT > | < tMENOS >
+}
+
+void expresion() :
+{}
+{
+ 	relacion()
+ 	( mas_relation() )?
+}
+
+void mas_relation() :
+{}
+{
+	( and_or() relacion() )+
+}
+
+void and_or() :
+{}
+{
+	< tOR >
+|	< tAND >
+}
+
+void relacion() :
+{}
+{
+	expresion_simple()
+	( 
+		operador_relacional()
+		expresion_simple()
+	)?
+}
+
+void operador_relacional() :
+{}
+{
+	< tIG >
+|	< tMEN >
+|	< tMAY >
+|	< tMENI >
+|	< tMAYI >
+|	< tDIF >
+}
+
+void expresion_simple() :
+{}
+{
+	termino()
+	( 
+		op_MAS_MENOS() 
+		termino()
+	)*
+}
+
+void op_MAS_MENOS() :
+{}
+{
+	< tMAS > 
+|	< tMENOS >
+}
+
+void tipo() :
+{}
+{
+	< tINT >
+|	< tCHAR >
+|	< tBOOL >
+|	< tVOID >
+}
+
+void termino() :
+{}
+{
+	factor()
+	( 
+		op_MULT()
+		factor()
+	)*
+}
+
+void op_MULT() :
+{}
+{
+	< tPROD >
+|	< tDIV >
+|	< tMOD>
+}
+
+
+void factor() :
+{}
+{
+	primario()
+|	operador_not()
+	primario()
+}
+
+
+void primario() :
+{}
+{
+	< tAP > expresion() < tCP >
+|	< tINT2CHAR > < tAP > expresion() < tCP >
+|	< tCHAR2INT > < tAP > expresion() < tCP >
+|	LOOKAHEAD(2) inst_invoc_proc()
+|	LOOKAHEAD(2) < tID > < tACOR > expresion() < tCCOR >
+|	< tID >
+|	< tCONST_INT >
+|	< tCONST_CHAR >
+|	< tCONST_STRING >
+|	< tTRUE >
+|	< tFALSE >
+}

@@ -1,0 +1,112 @@
+Programa: 
+	( declaracion )+
+	< EOF >
+
+declaracion: 
+	LOOKAHEAD(3)
+	declaracion_variables
+|	declaracion_func_proc
+
+
+declaracion_variables:
+	tipo
+	< tID >
+	resto_declaracion_vars
+
+declaracion_func_proc:
+	tipo
+	< tID >
+	resto_declaracion_func_proc
+
+...
+
+instruccion:
+	inst_leer < tPC >
+|	inst_leer_linea < tPC > 
+|	inst_escribir < tPC > 
+|	inst_escribir_linea < tPC > 
+|	LOOKAHEAD(2) inst_invoc_proc < tPC > 
+|	inst_asignacion < tPC > 
+|	inst_seleccion
+|	inst_iteracion
+|	inst_return < tPC > 
+
+...
+
+inst_asignacion:
+	asignable
+	< tASSIGN >
+	expresion
+
+...
+
+expresion:
+ 	relacion
+ 	( mas_relation )?
+
+mas_relation:
+	( and_or relacion )+
+
+and_or:
+	< tOR >
+|	< tAND >
+
+relacion:
+	expresion_simple
+	( 
+		operador_relacional
+		expresion_simple
+	)?
+
+operador_relacional:
+	< tIG >
+|	< tMEN >
+|	< tMAY >
+|	< tMENI >
+|	< tMAYI >
+|	< tDIF >
+
+expresion_simple:
+	( 
+		op_MAS_MENOS
+	)? 
+	termino
+	( 
+		op_MAS_MENOS 
+		termino
+	)*
+
+op_MAS_MENOS :
+	< tMAS > 
+|	< tMENOS >
+
+
+termino:
+	factor
+	( 
+		op_MULT
+		factor
+	)*
+
+op_MULT:
+	< tPROD >
+|	< tDIV >
+|	< tMOD>
+
+factor:
+	primario
+|	< tNOT >
+	primario
+
+primario:
+	< tAP > expresion < tCP >
+|	< tINT2CHAR > < tAP > expresion < tCP >
+|	< tCHAR2INT > < tAP > expresion < tCP >
+|	LOOKAHEAD(2) < tID > < tAP > lista_cero_o_mas_exps < tCP >
+|	LOOKAHEAD(2) < tID > < tACOR > expresion < tCCOR >
+|	< tID >
+|	< tCONST_INT >
+|	< tCONST_CHAR >
+|	< tCONST_STRING >
+|	< tTRUE >
+|	< tFALSE >

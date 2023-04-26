@@ -26,7 +26,7 @@ public class clike implements clikeConstants {
                         //Programa es el símbolo inicial de la gramática
                         parser.Programa();
                         //...
-                        System.out.println("***** An\u00e1lisis terminado con \u00e9xito *****");
+                        //System.out.println("***** Análisis terminado con éxito *****");
                 }
                 catch (java.io.FileNotFoundException e) {
                         System.err.println ("Fichero " + args[0] + " no encontrado.");
@@ -44,6 +44,7 @@ public class clike implements clikeConstants {
 
 //------------ Símbolo inicial de la gramática. Para análisis léxico no hace falta más
   static final public void Programa() throws ParseException {
+        code.addInst(OpCode.ENP, "MAIN");
     label_1:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -60,6 +61,7 @@ public class clike implements clikeConstants {
       declaracion();
     }
     jj_consume_token(0);
+                code.addInst(OpCode.LVP);
                 System.out.println(code);
   }
 
@@ -192,9 +194,9 @@ public class clike implements clikeConstants {
                                 System.out.println(e+", simbolo "+simb);
                         }
                 }
+
+                code.addLabel("MAIN");
     bloque_codigo_con_variables();
-                System.out.println("variables declaradas: ");
-                System.out.println(tablaSimbolos);
                 tablaSimbolos.removeBlock();
   }
 
@@ -445,10 +447,28 @@ public class clike implements clikeConstants {
   }
 
   static final public void inst_escribir() throws ParseException {
+        ArrayList<Symbol.Types> types;
     jj_consume_token(tPRINT);
     jj_consume_token(tAP);
-    argumentos();
+    types = argumentos();
     jj_consume_token(tCP);
+                for (int i = 0; i < types.size(); i++)
+                {
+                        if (types.get(i) != Symbol.Types.INT && types.get(i) != Symbol.Types.CHAR && types.get(i) != Symbol.Types.BOOL && types.get(i) != Symbol.Types.STRING)
+                                ErrorSemantico.deteccion("En print(), el argumento " + (i+1) + " no es de tipo entero, char, string o bool");
+
+                        if (types.get(i) == Symbol.Types.INT)
+                                code.addInst(OpCode.WRT, 1);
+                        else if (types.get(i) == Symbol.Types.CHAR)
+                                code.addInst(OpCode.WRT, 0);
+                        else if (types.get(i) == Symbol.Types.BOOL)
+                                code.addInst(OpCode.WRT, 1);
+                        else if (types.get(i) == Symbol.Types.STRING)
+                        {
+                                //System.out.println("Stringh");
+                                code.addInst(OpCode.WRT, 0);
+                        }
+                }
   }
 
   static final public void inst_escribir_linea() throws ParseException {
@@ -475,8 +495,11 @@ public class clike implements clikeConstants {
     jj_consume_token(tCP);
   }
 
-  static final public void argumentos() throws ParseException {
-    expresion();
+  static final public ArrayList<Symbol.Types> argumentos() throws ParseException {
+        Symbol.Types type;
+        ArrayList<Symbol.Types> types = new ArrayList<Symbol.Types>();
+    type = expresion();
+                             types.add(type);
     label_4:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -488,8 +511,11 @@ public class clike implements clikeConstants {
         break label_4;
       }
       jj_consume_token(tCOMMA);
-      expresion();
+      type = expresion();
+                                                                                 types.add(type);
     }
+                {if (true) return types;}
+    throw new Error("Missing return statement in function");
   }
 
   static final public void inst_asignacion() throws ParseException {
@@ -1138,8 +1164,11 @@ public class clike implements clikeConstants {
           tokenConst = jj_consume_token(tCONST_STRING);
                         symbolType = Symbol.Types.STRING;
 
-                        for (char ch : tokenConst.image.toCharArray())
-                                code.addInst(OpCode.STC, (int)ch);
+                        // Convierte la cadena a charArray
+                        char[] chars = tokenConst.image.toCharArray();
+
+                        for (int i = 1; i < chars.length-1; i++)
+                                code.addInst(OpCode.STC, (int)chars[i]);
           break;
         case tTRUE:
           tokenConst = jj_consume_token(tTRUE);
@@ -1204,19 +1233,60 @@ public class clike implements clikeConstants {
     finally { jj_save(5, xla); }
   }
 
+  static private boolean jj_3R_22() {
+    if (jj_scan_token(tCOMMA)) return true;
+    return false;
+  }
+
   static private boolean jj_3R_12() {
     if (jj_3R_15()) return true;
     if (jj_scan_token(tID)) return true;
     return false;
   }
 
-  static private boolean jj_3R_20() {
-    if (jj_scan_token(tVOID)) return true;
+  static private boolean jj_3R_23() {
+    if (jj_scan_token(tACOR)) return true;
     return false;
   }
 
-  static private boolean jj_3R_22() {
-    if (jj_scan_token(tCOMMA)) return true;
+  static private boolean jj_3R_11() {
+    if (jj_3R_15()) return true;
+    if (jj_3R_16()) return true;
+    return false;
+  }
+
+  static private boolean jj_3_6() {
+    if (jj_scan_token(tID)) return true;
+    if (jj_scan_token(tACOR)) return true;
+    return false;
+  }
+
+  static private boolean jj_3_5() {
+    if (jj_3R_13()) return true;
+    return false;
+  }
+
+  static private boolean jj_3_2() {
+    if (jj_3R_12()) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_21() {
+    if (jj_scan_token(tID)) return true;
+    Token xsp;
+    xsp = jj_scanpos;
+    if (jj_3R_23()) jj_scanpos = xsp;
+    return false;
+  }
+
+  static private boolean jj_3_1() {
+    if (jj_3R_11()) return true;
+    if (jj_scan_token(tPC)) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_20() {
+    if (jj_scan_token(tVOID)) return true;
     return false;
   }
 
@@ -1233,17 +1303,6 @@ public class clike implements clikeConstants {
 
   static private boolean jj_3R_19() {
     if (jj_scan_token(tBOOL)) return true;
-    return false;
-  }
-
-  static private boolean jj_3R_23() {
-    if (jj_scan_token(tACOR)) return true;
-    return false;
-  }
-
-  static private boolean jj_3R_11() {
-    if (jj_3R_15()) return true;
-    if (jj_3R_16()) return true;
     return false;
   }
 
@@ -1279,41 +1338,11 @@ public class clike implements clikeConstants {
     return false;
   }
 
-  static private boolean jj_3_2() {
-    if (jj_3R_12()) return true;
-    return false;
-  }
-
-  static private boolean jj_3R_21() {
-    if (jj_scan_token(tID)) return true;
-    Token xsp;
-    xsp = jj_scanpos;
-    if (jj_3R_23()) jj_scanpos = xsp;
-    return false;
-  }
-
-  static private boolean jj_3_1() {
-    if (jj_3R_11()) return true;
-    if (jj_scan_token(tPC)) return true;
-    return false;
-  }
-
   static private boolean jj_3R_16() {
     if (jj_3R_21()) return true;
     Token xsp;
     xsp = jj_scanpos;
     if (jj_3R_22()) jj_scanpos = xsp;
-    return false;
-  }
-
-  static private boolean jj_3_6() {
-    if (jj_scan_token(tID)) return true;
-    if (jj_scan_token(tACOR)) return true;
-    return false;
-  }
-
-  static private boolean jj_3_5() {
-    if (jj_3R_13()) return true;
     return false;
   }
 

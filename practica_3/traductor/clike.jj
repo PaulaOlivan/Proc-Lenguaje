@@ -1,0 +1,905 @@
+//*****************************************************************
+// File:   clike.jj
+// Author: Procesadores de Lenguajes-University of Zaragoza
+// Date:   noviembre 2022
+// Coms:   compilar mediante "ant"
+//*****************************************************************
+
+
+
+options {
+ 	IGNORE_CASE = false;
+ 	COMMON_TOKEN_ACTION = false;
+ 	// DEBUG_PARSER = true;
+ 	// ERROR_REPORTING = false;
+}
+
+PARSER_BEGIN(clike)
+
+package traductor;
+import java.io.*;
+import lib.symbolTable.*;
+import java.util.*;
+import lib.symbolTable.exceptions.*;
+import lib.errores.ErrorSemantico;
+
+public class clike {
+
+	protected static SymbolTable tablaSimbolos = new SymbolTable();
+	
+	public static void main(String[] args) {
+		clike parser = null;
+		
+		try {
+			if(args.length == 0) {
+				parser = new clike(System.in);
+			}
+			else {
+				parser = new clike(new java.io.FileInputStream(args[0]));			// 0 puede que sea el nombre del propio ejecutable, cuidado
+			}
+			//Programa es el símbolo inicial de la gramática
+			parser.Programa();
+			//...
+			System.out.println("***** Análisis terminado con éxito *****");
+		}
+		catch (java.io.FileNotFoundException e) {
+			System.err.println ("Fichero " + args[0] + " no encontrado.");
+		}
+		catch (TokenMgrError e) {
+			System.err.println("LEX_ERROR: " + e.getMessage());
+		}
+		catch (ParseException e) {
+			System.err.println("PARSE_ERROR: " + e.getMessage());
+		}
+		catch (Exception e) {
+			System.err.println("ERROR: " + e.getMessage());
+		}
+	}
+}
+PARSER_END(clike)
+
+SKIP : // Carácteres que debe detectar pero no generar token
+{
+	" "
+|	"\t"
+|	"\n"
+|	"\r" 
+}
+
+TOKEN : {
+ 	< #mLETTER: ["a"-"z"] >
+|	< #MLETTER: ["A"-"Z"] >
+|	< #LETTER:	(<mLETTER> | <MLETTER>) >
+|	< #DIGIT: 	["0"-"9"] >
+|	< #NUMBER:	(<DIGIT>)+ >
+|	< #IDCHAR:	(<LETTER> | <DIGIT> | "_") >
+}
+
+TOKEN : {
+	< tIBLOQUE:	"{"> {
+							//System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							//System.out.println("inicio de bloque " + "\"" + matchedToken + "\"");
+						}
+|	< tFBLOQUE:	"}"> {
+							//System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							//System.out.println("fin de bloque " + "\"" + matchedToken + "\"");
+						}
+|	< tAP:	"("> {
+							//System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							//System.out.println("inicio de parentesis" + "\"" + matchedToken + "\"");
+						}
+|	< tCP:	")"> {
+							//System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							//System.out.println("cierre de parentesis " + "\"" + matchedToken + "\"");
+						}
+|	< tACOR:	"["> {
+							//System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							//System.out.println("inicio de cochete " + "\"" + matchedToken + "\"");
+						}
+|	< tCCOR:	"]"> {
+							//System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							//System.out.println("cierre de corchete " + "\"" + matchedToken + "\"");
+						}
+|	< tREFER:	"&"> {
+							//System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							//System.out.println("operador de referencia " + "\"" + matchedToken + "\"");
+						}
+|	< tPC:		";"> {
+							//System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							//System.out.println("caracter de fin de linea " + "\"" + matchedToken + "\"");
+						}
+|	< tASSIGN:	"="> {
+							//System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							//System.out.println("operador asignacion " + "\"" + matchedToken + "\"");
+						}
+|	< tMAS:		"+"> {
+							//System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							//System.out.println("operador suma " + "\"" + matchedToken + "\"");
+						}
+|	< tMENOS:	"-"> {
+							//System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							//System.out.println("operador resta " + "\"" + matchedToken + "\"");
+						}
+|	< tPROD:	"*"> {
+							//System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							//System.out.println("operador multiplicacion " + "\"" + matchedToken + "\"");
+						}
+|	< tDIV:		"/"> {
+							//System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							//System.out.println("operador division " + "\"" + matchedToken + "\"");
+						}
+|	< tMOD:		"%"> {
+							//System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							//System.out.println("operador modulo " + "\"" + matchedToken + "\"");
+						}
+|	< tMEN:		"<"> {
+							//System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							//System.out.println("operador menor que " + "\"" + matchedToken + "\"");
+						}
+|	< tMAY:		">"> {
+							//System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							//System.out.println("operador mayor que " + "\"" + matchedToken + "\"");
+						}
+|	< tMENI:	"<="> {
+							//System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							//System.out.println("operador menor o igual " + "\"" + matchedToken + "\"");
+						}
+|	< tMAYI:	">="> {
+							//System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							//System.out.println("operador mayor o igual " + "\"" + matchedToken + "\"");
+						}
+|	< tDIF:		"!="> {
+							//System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							//System.out.println("operador distinto " + "\"" + matchedToken + "\"");
+						}
+|	< tIG:		"=="> {
+							//System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							//System.out.println("operador igual " + "\"" + matchedToken + "\"");
+						}
+|	< tOR:		"||"> {
+							//System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							//System.out.println("operador or exclusivo " + "\"" + matchedToken + "\"");
+						}
+|	< tAND:		"&&"> {
+							//System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							//System.out.println("operador and exclusivo " + "\"" + matchedToken + "\"");
+						}
+|	< tNOT:		"!"> {
+							//System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							//System.out.println("operador negar " + "\"" + matchedToken + "\"");
+						}
+|	< tWHILE:	"while"> {
+							//System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							//System.out.println("token " + "\"" + matchedToken + "\"");
+						}
+|	< tIF:	"if"> {
+							//System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							//System.out.println("token " + "\"" + matchedToken + "\"");
+						}
+|	< tELSE: "else"> {
+							//System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							//System.out.println("token " + "\"" + matchedToken + "\"");
+						}
+}
+
+TOKEN : {
+	< tBOOL: 	"bool" > {
+							//System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							//System.out.println("token " + "\"" + matchedToken + "\"");
+						}
+|	< tCHAR: 	"char" > {
+							//System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							//System.out.println("token " + "\"" + matchedToken + "\"");
+						}
+|	< tINT:		"int" > {
+							//System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							//System.out.println("token " + "\"" + matchedToken + "\"");
+						}
+| 	< tFALSE:	"false" > {
+							//System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							//System.out.println("false " + "\"" + matchedToken + "\"");
+						}
+|	< tTRUE:	"true" > {
+							//System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							//System.out.println("true " + "\"" + matchedToken + "\"");
+						}
+|	< tVOID: 	"void" > {
+							//System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							//System.out.println("procedimiento " + "\"" + matchedToken + "\"");
+						}
+|	< tPRINT: 	"print" > {
+							//System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							//System.out.println("función" + "\"" + matchedToken + "\"");
+						}
+|	< tPRINTLN: "print_ln" > {
+							//System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							//System.out.println("función " + "\"" + matchedToken + "\"");
+						}
+|	< tREAD: 	"read" > {
+							//System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							//System.out.println("función " + "\"" + matchedToken + "\"");
+						}
+|	< tREADLN: 	"read_ln" > {
+							//System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							//System.out.println("función " + "\"" + matchedToken + "\"");
+						}
+|	< tRETURN: 	"return" > {
+							//System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							//System.out.println("token " + "\"" + matchedToken + "\"");
+						}
+|	< tINT2CHAR: 	"int2char" > {
+							//System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							//System.out.println("función " + "\"" + matchedToken + "\"");
+						}
+|	< tCHAR2INT: 	"char2int" > {
+							//System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							//System.out.println("función " + "\"" + matchedToken + "\"");
+						}
+|	< tCONST_STRING:	"\"" ((~["\"" , "\n"]) | "\"\"")* "\"" > {
+							//System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							//System.out.println("constante string " + "\"" + matchedToken + "\"");
+						}
+|	< tCOMMA:	"," > {
+							//System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							//System.out.println("operador concatenación " + "\"" + matchedToken + "\"");
+						}
+|	< tCONST_INT:	(<NUMBER>) > {
+							//System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							//System.out.println("constante entera " + "\"" + matchedToken + "\"");
+						}
+|	< tCONST_CHAR:		"\'" ((~["\"" , "\n"]) | "\"\"") "\'" > {
+							//System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							//System.out.println("constante char " + "\"" + matchedToken + "\"");
+						}
+|	< tID:		(<IDCHAR>)+ > {
+							//System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
+							//System.out.println("identificador " + "\"" + matchedToken + "\"");
+						}
+}
+
+SPECIAL_TOKEN : {
+	<tBASURA : ~[] >
+	{
+		System.err.println("ERROR LEXICO: ("+ matchedToken.beginLine + "," + matchedToken.beginColumn + ") :simbolo no reconocido: " + matchedToken);
+		matchedToken.image = " ";
+	}
+|	< tCOMM: 	"//"(~["\n"])*> {} //Unicamente lo reconocemos pero no lo sacamos por pantalla
+
+}
+
+//------------ Símbolo inicial de la gramática. Para análisis léxico no hace falta más
+void Programa() : 
+{}
+{
+	( declaracion() )*
+	< EOF >
+}
+
+void declaracion() :
+{
+	List<Symbol> simbolos;
+}
+{
+	LOOKAHEAD(3)
+	declaracion_variables() <tPC>
+|	declaracion_func_proc()
+}
+
+void declaracion_variables() :
+{
+	Symbol.Types type;
+	List<Symbol> symbols;
+}
+{
+	type = tipo()
+	symbols = ids(type)
+	{
+		try {
+			for (Symbol simbolo : symbols)
+				tablaSimbolos.insertSymbol(simbolo);
+		}
+		catch (AlreadyDefinedSymbolException e){
+			System.out.println(e);
+		}
+	}
+}
+
+ArrayList<Symbol> ids(Symbol.Types type) :
+{
+	ArrayList<Symbol> symbols = null;
+	Symbol symbol;
+}
+{
+	symbol = decl_1_variable(type) (< tCOMMA > symbols = ids(type))?
+	{
+		if (symbols == null)
+			symbols = new ArrayList<Symbol>();
+
+		symbols.add(symbol);
+		return symbols;
+	}
+}
+
+Symbol decl_1_variable(Symbol.Types type) :
+{
+	Token id;
+	Token size = null;
+}
+{
+	id = <tID> (< tACOR > size = < tCONST_INT > < tCCOR >)?
+	{
+		if (size != null)
+			return new SymbolArray(id.image, 0, Integer.parseInt(size.image)-1, type);
+		else
+			return Symbol.createNormalSymbol(id.image, type);
+	}
+}
+
+void declaracion_func_proc() :
+{
+	Symbol.Types tipo;
+	Token token;
+	ArrayList<Symbol> parametros = null;
+	Symbol simbolo;
+}
+{
+(
+	tipo = tipo()
+	token = < tID >
+	< tAP >
+	(parametros = declaracion_parametros())?
+	< tCP >
+	{
+		if (parametros == null)
+		{
+			parametros = new ArrayList<Symbol>();
+		}
+	
+		if (tipo == Symbol.Types.VOID)
+		{
+			simbolo = new SymbolProcedure(token.image, parametros);
+		}
+		else
+		{
+			simbolo = new SymbolFunction(token.image, parametros, tipo);
+		}
+	
+		try{
+			tablaSimbolos.insertSymbol(simbolo);
+		}
+		catch (AlreadyDefinedSymbolException e){
+			System.out.println(e);
+		}
+
+		tablaSimbolos.insertBlock();
+
+		for (Symbol simb : parametros)
+		{
+			try{
+				tablaSimbolos.insertSymbol(simb);
+			}
+			catch (AlreadyDefinedSymbolException e) {
+				System.out.println(e+", simbolo "+simb);
+			}
+		}
+	}
+	bloque_codigo_con_variables()
+	{
+		System.out.println("variables declaradas: ");
+		System.out.println(tablaSimbolos);
+		tablaSimbolos.removeBlock();
+	}
+)
+}
+
+ArrayList<Symbol> declaracion_parametros() :
+{
+	Symbol symbol;
+	ArrayList<Symbol> parametros = new ArrayList<Symbol>();
+}
+{
+	symbol = declaracion_parametro() (< tCOMMA > parametros = declaracion_parametros())?
+	{
+		parametros.add(0, symbol);
+		return parametros;
+	}
+}
+
+Symbol declaracion_parametro() :
+{
+	Symbol.Types type;
+	Symbol symbol;
+	Token ref = null;	
+}
+{
+	type = tipo() (ref = < tREFER >)? symbol = decl_1_variable(type)
+	{
+		if (ref != null)
+		{
+			symbol.parClass = Symbol.ParameterClass.REF;	
+			return symbol;
+		}
+		else
+		{
+			symbol.parClass = Symbol.ParameterClass.VAL;
+			return symbol;
+		}
+	}
+}
+
+void instruccion() :
+{}
+{
+	inst_leer() < tPC >
+|	inst_leer_linea() < tPC > 
+|	inst_escribir() < tPC > 
+|	inst_escribir_linea() < tPC >
+// Para evitar ambigüedad con invocación de función
+| 	LOOKAHEAD(2) inst_invoc_proc() < tPC > 	
+|	inst_asignacion() < tPC > 
+|	inst_seleccion()
+|	inst_iteracion()
+|	inst_return() < tPC > 
+}
+
+void inst_leer() :
+{
+	Token token;
+	Symbol.Types type;
+}
+{
+	< tREAD >
+	< tAP >
+	token = < tID >
+	{
+		try {
+			type = tablaSimbolos.getSymbol(token.image).type;
+		}
+		catch(SymbolNotFoundException e)
+		{
+			type = Symbol.Types.UNDEFINED;
+			ErrorSemantico.deteccion(e, token);
+		}
+
+		if (type != Symbol.Types.INT && type != Symbol.Types.CHAR && type != Symbol.Types.BOOL)
+			ErrorSemantico.deteccion("En read(), la variable " + token.image + " no es de tipo entero, char, string o bool", token);
+	}
+	( 
+		< tCOMMA > token = < tID > 
+		{
+			try {
+				type = tablaSimbolos.getSymbol(token.image).type;
+			}
+			catch(SymbolNotFoundException e)
+			{
+				type = Symbol.Types.UNDEFINED;
+				ErrorSemantico.deteccion(e, token);
+			}
+	
+			if (type != Symbol.Types.INT && type != Symbol.Types.CHAR && type != Symbol.Types.BOOL)
+				ErrorSemantico.deteccion("En read(), la variable " + token.image + " no es de tipo entero, char, string o bool", token);
+		}
+	)*
+	< tCP >
+}
+
+void inst_leer_linea() :
+{
+	Token token;
+	Symbol.Types type;
+}
+{
+	< tREADLN >
+	< tAP >
+	( 
+	token = < tID >
+	{
+		try {
+			type = tablaSimbolos.getSymbol(token.image).type;
+		}
+		catch(SymbolNotFoundException e)
+		{
+			type = Symbol.Types.UNDEFINED;
+			ErrorSemantico.deteccion(e, token);
+		}
+
+		if (type != Symbol.Types.INT && type != Symbol.Types.CHAR && type != Symbol.Types.BOOL)
+			ErrorSemantico.deteccion("En readln(), la variable " + token.image + " no es de tipo entero, char, string o bool", token);
+	}
+	)?
+	( < tCOMMA > token = < tID > 
+	{
+		try {
+			type = tablaSimbolos.getSymbol(token.image).type;
+		}
+		catch(SymbolNotFoundException e)
+		{
+			type = Symbol.Types.UNDEFINED;
+			ErrorSemantico.deteccion(e, token);
+		}
+
+		if (type != Symbol.Types.INT && type != Symbol.Types.CHAR && type != Symbol.Types.BOOL)
+			ErrorSemantico.deteccion("En readln(), la variable " + token.image + " no es de tipo entero, char, string o bool", token);
+	}
+	)*
+	< tCP >
+}
+
+void inst_escribir() :
+{}
+{
+	< tPRINT >
+	< tAP >
+	argumentos()
+	< tCP >
+}
+
+void inst_escribir_linea() :
+{}
+{
+	< tPRINTLN >
+	< tAP >
+	(argumentos())?
+	< tCP >
+}
+
+void argumentos() :
+{}
+{
+	expresion() (< tCOMMA > expresion())*
+}
+
+void inst_asignacion() :
+{
+	Symbol.Types symbolAss, symbolExp;
+}
+{
+	symbolAss = asignable()
+	< tASSIGN >
+	symbolExp = expresion()
+	{
+		if (symbolAss != symbolExp)
+		{
+			ErrorSemantico.deteccion("En asignación, la expresión de tipo " + symbolExp + " no coincide con el tipo de la variable: "+symbolAss, token);
+		}
+	}
+}
+
+Symbol.Types asignable() :
+{
+	Symbol.Types index = null;
+	Token token;
+}
+{
+	token = < tID > ( < tACOR > index = expresion() < tCCOR > )?
+	{
+		if (index == null)
+		{
+			return tablaSimbolos.getSymbol(token.image).type;
+		}
+		else // Nuestro simbolo forma parte de un vector
+		{
+			if (index != Symbol.Types.INT)
+			{
+				ErrorSemantico.deteccion("En asignación, el índice del vector " + token.image + " no es de tipo entero", token);
+			}
+
+			SymbolArray element = (SymbolArray) tablaSimbolos.getSymbol(token.image);
+
+			return element.baseType;
+		}
+	}
+}
+
+void inst_seleccion() :
+{}
+{
+	< tIF > < tAP > expresion() < tCP > bloque_codigo()
+	(
+		LOOKAHEAD(2)
+		bloque_else_ifs()
+	| < tELSE > bloque_codigo() 
+	)?
+
+}
+
+void bloque_else_ifs():
+{}
+{
+	< tELSE > < tIF > < tAP > expresion() < tCP > 
+	bloque_codigo() 
+	(bloque_else_ifs())?
+
+}
+
+void inst_iteracion() :
+{}
+{
+	< tWHILE > < tAP > expresion() < tCP > bloque_codigo()
+}
+
+void bloque_codigo() :
+{}
+{
+	< tIBLOQUE >
+	(instruccion())*
+	< tFBLOQUE >
+}
+
+void bloque_codigo_con_variables() :
+{}
+{
+	< tIBLOQUE >
+	(declaracion_variables() < tPC >)*
+	(instruccion())*
+	< tFBLOQUE >
+}
+
+
+void inst_return() :
+{}
+{
+	< tRETURN > expresion()
+}
+
+Symbol.Types inst_invoc_proc() :
+{
+	Token token;
+	Symbol.Types tipo = null;
+}
+{
+	token = < tID >
+	< tAP >
+	(argumentos())?
+	< tCP >
+	{
+		try{
+			Symbol SimboloDeFuncion = tablaSimbolos.getSymbol(token.image);
+			if (SimboloDeFuncion.type == Symbol.Types.PROCEDURE)
+			{
+				tipo = Symbol.Types.VOID;
+			}
+			else if (SimboloDeFuncion.type == Symbol.Types.FUNCTION)
+			{
+				SymbolFunction funcion = (SymbolFunction) SimboloDeFuncion;
+				tipo = funcion.returnType;
+			}
+			else
+			{
+				ErrorSemantico.deteccion("El identificador " + token.image + " no es una función ni un procedimiento", token);
+			}
+		}	
+		catch (SymbolNotFoundException e) {
+			System.out.println(e+", linea "+token.beginLine+", columna "+token.beginColumn);
+		}
+
+		return tipo;
+	}
+}
+
+void operador_not() :
+{}
+{
+	< tNOT > | < tMENOS >
+}
+
+Symbol.Types expresion() :
+{
+	Symbol.Types factor1Type, factor2Type = null;
+}
+{
+	factor1Type = relacion()
+ 	(and_or() factor2Type = relacion())*
+	{
+		if (factor2Type != null)
+		{
+			if (factor1Type != Symbol.Types.BOOL || factor2Type!= Symbol.Types.BOOL)
+			{
+				ErrorSemantico.deteccion("En operación lógica, los operandos deben ser de tipo bool ("+
+										factor1Type+", "+factor2Type+")", token);
+			}
+
+			return Symbol.Types.BOOL;
+		}
+		else
+		{
+			return factor1Type;
+		}
+	}
+}
+
+void and_or() :
+{}
+{
+	< tOR >
+|	< tAND >
+}
+
+Symbol.Types relacion() :
+{
+	Symbol.Types factor1Type, factor2Type = null;
+}
+{
+	factor1Type = expresion_simple()
+	( 
+		operador_relacional()
+		factor2Type = expresion_simple()
+	)?
+	{
+		if (factor2Type != null)
+		{
+			if (factor1Type != factor2Type)
+			{
+				ErrorSemantico.deteccion("En relacion,los operandos deben ser del mismo tipo ("+
+										factor1Type+", "+factor2Type+")", token);
+			}
+
+			return Symbol.Types.BOOL;
+		}
+		else
+		{
+			return factor1Type;
+		}
+	}
+}
+
+void operador_relacional() :
+{}
+{
+	< tIG >
+|	< tMEN >
+|	< tMAY >
+|	< tMENI >
+|	< tMAYI >
+|	< tDIF >
+}
+
+Symbol.Types expresion_simple() :
+{
+	Symbol.Types factor1Type, factor2Type = null;
+}
+{
+	factor1Type = termino()
+	( 
+		op_MAS_MENOS() 
+		factor2Type = termino()
+	)*
+	{
+		if (factor2Type != null)
+		{
+			if (factor1Type != factor2Type)
+			{
+				ErrorSemantico.deteccion("En expresión simple, los operandos deben ser del mismo tipo", token);
+			}
+
+			return factor1Type;
+		}
+		else
+		{
+			return factor1Type;
+		}
+	}
+}
+
+void op_MAS_MENOS() :
+{}
+{
+	< tMAS > 
+|	< tMENOS >
+}
+
+Symbol.Types tipo() :
+{}
+{
+	< tINT >
+	{
+		return Symbol.Types.INT;
+	}
+|	< tCHAR >
+	{
+		return Symbol.Types.CHAR;
+	}
+|	< tBOOL >
+	{
+		return Symbol.Types.BOOL;
+	}
+|	< tVOID >
+	{
+		return Symbol.Types.VOID;
+	}
+}
+
+Symbol.Types termino() :
+{
+	Symbol.Types factor1Type, factor2Type = null;
+}
+{
+	factor1Type = factor()
+	( 
+		op_MULT()
+		factor2Type = factor()
+	)*
+	{
+		if (factor2Type != null)
+		{
+			if (factor1Type != factor2Type)
+			{
+				ErrorSemantico.deteccion("En termino, los operandos deben ser del mismo tipo", token);
+			}
+
+			return factor1Type;
+		}
+		else
+		{
+			return factor1Type;
+		}
+	}
+}
+
+void op_MULT() :
+{}
+{
+	< tPROD >
+|	< tDIV >
+|	< tMOD>
+}
+
+
+Symbol.Types factor() :
+{
+	Symbol.Types factorType;
+}
+{
+	(
+		factorType = primario()
+		|	operador_not()
+		factorType = primario()
+	)
+	{
+		return factorType;
+	}
+}
+
+
+Symbol.Types primario() :
+{
+	Token token = null, tokenConst = null;
+	Symbol.Types symbolType = null, symbolCastToChar = null, symbolCastToInt = null;
+}
+{
+	(	
+			< tAP > symbolType = expresion() < tCP >
+		|	< tINT2CHAR > < tAP > symbolType = expresion() < tCP >
+		|	< tCHAR2INT > < tAP > symbolType = expresion() < tCP >
+		|	LOOKAHEAD(2) symbolType = inst_invoc_proc()
+		|	LOOKAHEAD(2) token = < tID > < tACOR > symbolType = expresion() < tCCOR >
+		{
+			if (symbolType != Symbol.Types.INT)
+			{
+				ErrorSemantico.deteccion("El índice del array debe ser de tipo int", token);
+			}
+			else
+			{
+				Symbol arr = tablaSimbolos.getSymbol(token.image);
+				
+				if (arr.type != Symbol.Types.ARRAY)
+				{
+					ErrorSemantico.deteccion("El identificador no es un array", token);
+				}
+				else
+				{
+					symbolType = ((SymbolArray)arr).baseType;
+				}
+			}
+		}
+		|	token = < tID >{ symbolType = tablaSimbolos.getSymbol(token.image).type; }
+		|	tokenConst = < tCONST_INT > { symbolType = Symbol.Types.INT; }
+		|	tokenConst = < tCONST_CHAR > { symbolType = Symbol.Types.CHAR; }
+		|	tokenConst = < tCONST_STRING > { symbolType = Symbol.Types.STRING; }
+		|	tokenConst = < tTRUE >{ symbolType = Symbol.Types.BOOL; }
+		|	tokenConst = < tFALSE >{ symbolType = Symbol.Types.BOOL; }
+	)
+	{
+		return symbolType;
+	}
+}

@@ -59,6 +59,26 @@ public class clike {
 			System.err.println("ERROR: " + e.getMessage());
 		}
 	}
+
+	
+	public static void print_argument(Symbol.Types type){
+		
+		if (type == Symbol.Types.INT 
+			|| 
+			type == Symbol.Types.BOOL
+			)
+		{
+			code.addInst(OpCode.WRT, 1);
+		}
+		else if (type == Symbol.Types.CHAR)
+		{
+			code.addInst(OpCode.WRT, 0);
+		}
+		else if (type == Symbol.Types.STRING)
+		{
+			// Los strings se imprimen conforme se reciben
+		}
+}
 }
 PARSER_END(clike)
 
@@ -604,36 +624,32 @@ void inst_escribir() :
 {
 	< tPRINT >
 	< tAP >
-	types = argumentos()
+	argumentos_escribir()
 	< tCP >
-	{
-		for (int i = 0; i < types.size(); i++)
-		{
-			if (types.get(i) != Symbol.Types.INT && types.get(i) != Symbol.Types.CHAR && types.get(i) != Symbol.Types.BOOL && types.get(i) != Symbol.Types.STRING)
-				ErrorSemantico.deteccion("En print(), el argumento " + (i+1) + " no es de tipo entero, char, string o bool");
-
-			if (types.get(i) == Symbol.Types.INT)
-				code.addInst(OpCode.WRT, 1);
-			else if (types.get(i) == Symbol.Types.CHAR)
-				code.addInst(OpCode.WRT, 0);
-			else if (types.get(i) == Symbol.Types.BOOL)
-				code.addInst(OpCode.WRT, 1);
-			else if (types.get(i) == Symbol.Types.STRING)
-			{
-				//System.out.println("Stringh");
-				code.addInst(OpCode.WRT, 0);
-			}
-		}
-	}
 }
 
 void inst_escribir_linea() :
 {}
 {
+	(
 	< tPRINTLN >
 	< tAP >
-	(argumentos())?
+	(argumentos_escribir())?
 	< tCP >
+	)
+	{
+		code.addInst(OpCode.STC, '\n');
+		code.addInst(OpCode.WRT, 0);
+	}
+}
+
+void argumentos_escribir() :
+{
+	Symbol.Types type;
+}
+{
+	type = expresion() { print_argument(type); } (< tCOMMA > type = expresion() { print_argument(type);})*
+	{}
 }
 
 ArrayList<Symbol.Types> argumentos() :
@@ -642,7 +658,7 @@ ArrayList<Symbol.Types> argumentos() :
 	ArrayList<Symbol.Types> types = new ArrayList<Symbol.Types>();
 }
 {
-	type = expresion() { types.add(type); } (< tCOMMA > type = expresion() { types.add(type);})*
+	type = expresion() { types.add(type); } (< tCOMMA > type = expresion() { types.add(type); })*
 	{
 		return types;
 	}
@@ -1081,7 +1097,10 @@ Symbol.Types primario() :
 		|	tokenConst = < tCONST_CHAR > 
 		{ 
 			symbolType = Symbol.Types.CHAR; 
-			code.addInst(OpCode.STC, Integer.valueOf(tokenConst.image));
+
+			char[] character = tokenConst.image.toCharArray();
+
+			code.addInst(OpCode.STC, Integer.valueOf(character[1]));
 		}
 		|	tokenConst = < tCONST_STRING > 
 		{ 
@@ -1091,7 +1110,10 @@ Symbol.Types primario() :
 			char[] chars = tokenConst.image.toCharArray();
 
 			for (int i = 1; i < chars.length-1; i++)
+			{
 				code.addInst(OpCode.STC, (int)chars[i]);
+				code.addInst(OpCode.WRT, 0);
+			}
 		}
 		|	tokenConst = < tTRUE >
 		{ 

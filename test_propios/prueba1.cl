@@ -2,7 +2,7 @@ void main()
 {
     int i;
 
-    read_ln(i);
+    read(i);
 
     print_ln(i);
 }

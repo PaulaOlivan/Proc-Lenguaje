@@ -1,0 +1,16 @@
+  ENP MAIN
+MAIN:
+  STC  3
+  RD  1
+READLNLOOP3:
+  RD  0
+  STC 10
+  NEQ
+  JMT READLNLOOP3
+  STC  3
+  DRF
+  WRT  1
+  STC 10
+  WRT  0
+  LVP
+

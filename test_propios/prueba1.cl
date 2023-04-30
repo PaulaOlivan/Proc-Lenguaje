@@ -1,11 +1,8 @@
-
-
-
 void main()
 {
-    int n[2];
     int i;
 
-    i = 1;
-    n[0] = i*2;
+    read_ln(i);
+
+    print_ln(i);
 }

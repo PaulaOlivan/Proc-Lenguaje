@@ -1,0 +1,22 @@
+  ENP MAIN
+MAIN:
+  STC  5
+  STC  1
+  ASG
+  STC  0
+  STC  3
+  PLUS
+  STC  5
+  DRF
+  STC  2
+  TMS
+  ASG
+  STC  0
+  STC  3
+  PLUS
+  DRF
+  WRT  1
+  STC 10
+  WRT  0
+  LVP
+

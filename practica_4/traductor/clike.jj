@@ -78,7 +78,7 @@ public class clike {
 		{
 			// Los strings se imprimen conforme se reciben
 		}
-}
+	}
 }
 PARSER_END(clike)
 
@@ -537,7 +537,7 @@ void instruccion() :
 void inst_leer() :
 {
 	Token token;
-	Symbol.Types type;
+	Symbol simb;
 }
 {
 	< tREAD >
@@ -545,31 +545,39 @@ void inst_leer() :
 	token = < tID >
 	{
 		try {
-			type = tablaSimbolos.getSymbol(token.image).type;
+			simb = tablaSimbolos.getSymbol(token.image);
+
+			code.addInst(OpCode.STC, (int)simb.dir);
+			if (simb.type == Symbol.Types.INT || simb.type == Symbol.Types.BOOL)
+				code.addInst(OpCode.RD, 1); 
+			else if (simb.type == Symbol.Types.CHAR)
+				code.addInst(OpCode.RD, 0);
+			else
+				ErrorSemantico.deteccion("En read(), la variable no es de tipo entero, char o bool", null);
 		}
 		catch(SymbolNotFoundException e)
 		{
-			type = Symbol.Types.UNDEFINED;
 			ErrorSemantico.deteccion(e, token);
 		}
-
-		if (type != Symbol.Types.INT && type != Symbol.Types.CHAR && type != Symbol.Types.BOOL)
-			ErrorSemantico.deteccion("En read(), la variable " + token.image + " no es de tipo entero, char, string o bool", token);
 	}
 	( 
 		< tCOMMA > token = < tID > 
 		{
 			try {
-				type = tablaSimbolos.getSymbol(token.image).type;
+				simb = tablaSimbolos.getSymbol(token.image);
+
+				code.addInst(OpCode.STC, (int)simb.dir);
+				if (simb.type == Symbol.Types.INT || simb.type == Symbol.Types.BOOL)
+					code.addInst(OpCode.RD, 1); 
+				else if (simb.type == Symbol.Types.CHAR)
+					code.addInst(OpCode.RD, 0);
+				else
+					ErrorSemantico.deteccion("En read(), la variable no es de tipo entero, char o bool", null);
 			}
 			catch(SymbolNotFoundException e)
 			{
-				type = Symbol.Types.UNDEFINED;
 				ErrorSemantico.deteccion(e, token);
 			}
-	
-			if (type != Symbol.Types.INT && type != Symbol.Types.CHAR && type != Symbol.Types.BOOL)
-				ErrorSemantico.deteccion("En read(), la variable " + token.image + " no es de tipo entero, char, string o bool", token);
 		}
 	)*
 	< tCP >
@@ -578,7 +586,7 @@ void inst_leer() :
 void inst_leer_linea() :
 {
 	Token token;
-	Symbol.Types type;
+	Symbol simb = null;
 }
 {
 	< tREADLN >
@@ -587,34 +595,59 @@ void inst_leer_linea() :
 	token = < tID >
 	{
 		try {
-			type = tablaSimbolos.getSymbol(token.image).type;
+			simb = tablaSimbolos.getSymbol(token.image);
+
+			if (simb.type != Symbol.Types.INT && simb.type != Symbol.Types.CHAR && simb.type != Symbol.Types.BOOL)
+			ErrorSemantico.deteccion("En readln(), la variable " + token.image + " no es de tipo entero, char, string o bool", token);
+		
+			code.addInst(OpCode.STC, (int)simb.dir);
+			if (simb.type == Symbol.Types.INT || simb.type == Symbol.Types.BOOL)
+				code.addInst(OpCode.RD, 1); 
+			else if (simb.type == Symbol.Types.CHAR)
+				code.addInst(OpCode.RD, 0);
+			else
+				ErrorSemantico.deteccion("En readln(), la variable " + token.image + " no es de tipo entero, char, string o bool", token);
 		}
 		catch(SymbolNotFoundException e)
 		{
-			type = Symbol.Types.UNDEFINED;
 			ErrorSemantico.deteccion(e, token);
 		}
-
-		if (type != Symbol.Types.INT && type != Symbol.Types.CHAR && type != Symbol.Types.BOOL)
-			ErrorSemantico.deteccion("En readln(), la variable " + token.image + " no es de tipo entero, char, string o bool", token);
 	}
+
 	)?
 	( < tCOMMA > token = < tID > 
 	{
 		try {
-			type = tablaSimbolos.getSymbol(token.image).type;
+			simb = tablaSimbolos.getSymbol(token.image);
+
+			if (simb.type != Symbol.Types.INT && simb.type != Symbol.Types.CHAR && simb.type != Symbol.Types.BOOL)
+			ErrorSemantico.deteccion("En readln(), la variable " + token.image + " no es de tipo entero, char, string o bool", token);
+			code.addInst(OpCode.STC, (int)simb.dir);
+			if (simb.type == Symbol.Types.INT || simb.type == Symbol.Types.BOOL)
+				code.addInst(OpCode.RD, 1); 
+			else if (simb.type == Symbol.Types.CHAR)
+				code.addInst(OpCode.RD, 0);
+			else
+				ErrorSemantico.deteccion("En readln(), la variable " + token.image + " no es de tipo entero, char, string o bool", token);
 		}
 		catch(SymbolNotFoundException e)
 		{
-			type = Symbol.Types.UNDEFINED;
 			ErrorSemantico.deteccion(e, token);
 		}
-
-		if (type != Symbol.Types.INT && type != Symbol.Types.CHAR && type != Symbol.Types.BOOL)
-			ErrorSemantico.deteccion("En readln(), la variable " + token.image + " no es de tipo entero, char, string o bool", token);
 	}
 	)*
 	< tCP >
+	{
+		if (simb != null){
+			code.addLabel("READLNLOOP" + simb.dir);
+			code.addInst(OpCode.RD, 0);
+			code.addInst(OpCode.STC, '\n');
+			code.addInst(OpCode.NEQ);
+			code.addInst(OpCode.JMT, "READLNLOOP" + simb.dir);
+		}
+		// Añadimos bucle hasta detectar salto de línea
+
+	}
 }
 
 void inst_escribir() :

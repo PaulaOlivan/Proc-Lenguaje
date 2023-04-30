@@ -60,7 +60,7 @@ public class clike implements clikeConstants {
                 {
                         // Los strings se imprimen conforme se reciben
                 }
-}
+        }
 
 //------------ Símbolo inicial de la gramática. Para análisis léxico no hace falta más
   static final public void Programa() throws ParseException {
@@ -373,21 +373,25 @@ public class clike implements clikeConstants {
 
   static final public void inst_leer() throws ParseException {
         Token token;
-        Symbol.Types type;
+        Symbol simb;
     jj_consume_token(tREAD);
     jj_consume_token(tAP);
     token = jj_consume_token(tID);
                 try {
-                        type = tablaSimbolos.getSymbol(token.image).type;
+                        simb = tablaSimbolos.getSymbol(token.image);
+
+                        code.addInst(OpCode.STC, (int)simb.dir);
+                        if (simb.type == Symbol.Types.INT || simb.type == Symbol.Types.BOOL)
+                                code.addInst(OpCode.RD, 1);
+                        else if (simb.type == Symbol.Types.CHAR)
+                                code.addInst(OpCode.RD, 0);
+                        else
+                                ErrorSemantico.deteccion("En read(), la variable no es de tipo entero, char o bool", null);
                 }
                 catch(SymbolNotFoundException e)
                 {
-                        type = Symbol.Types.UNDEFINED;
                         ErrorSemantico.deteccion(e, token);
                 }
-
-                if (type != Symbol.Types.INT && type != Symbol.Types.CHAR && type != Symbol.Types.BOOL)
-                        ErrorSemantico.deteccion("En read(), la variable " + token.image + " no es de tipo entero, char, string o bool", token);
     label_2:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -401,39 +405,50 @@ public class clike implements clikeConstants {
       jj_consume_token(tCOMMA);
       token = jj_consume_token(tID);
                         try {
-                                type = tablaSimbolos.getSymbol(token.image).type;
+                                simb = tablaSimbolos.getSymbol(token.image);
+
+                                code.addInst(OpCode.STC, (int)simb.dir);
+                                if (simb.type == Symbol.Types.INT || simb.type == Symbol.Types.BOOL)
+                                        code.addInst(OpCode.RD, 1);
+                                else if (simb.type == Symbol.Types.CHAR)
+                                        code.addInst(OpCode.RD, 0);
+                                else
+                                        ErrorSemantico.deteccion("En read(), la variable no es de tipo entero, char o bool", null);
                         }
                         catch(SymbolNotFoundException e)
                         {
-                                type = Symbol.Types.UNDEFINED;
                                 ErrorSemantico.deteccion(e, token);
                         }
-
-                        if (type != Symbol.Types.INT && type != Symbol.Types.CHAR && type != Symbol.Types.BOOL)
-                                ErrorSemantico.deteccion("En read(), la variable " + token.image + " no es de tipo entero, char, string o bool", token);
     }
     jj_consume_token(tCP);
   }
 
   static final public void inst_leer_linea() throws ParseException {
         Token token;
-        Symbol.Types type;
+        Symbol simb = null;
     jj_consume_token(tREADLN);
     jj_consume_token(tAP);
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case tID:
       token = jj_consume_token(tID);
                 try {
-                        type = tablaSimbolos.getSymbol(token.image).type;
+                        simb = tablaSimbolos.getSymbol(token.image);
+
+                        if (simb.type != Symbol.Types.INT && simb.type != Symbol.Types.CHAR && simb.type != Symbol.Types.BOOL)
+                        ErrorSemantico.deteccion("En readln(), la variable " + token.image + " no es de tipo entero, char, string o bool", token);
+
+                        code.addInst(OpCode.STC, (int)simb.dir);
+                        if (simb.type == Symbol.Types.INT || simb.type == Symbol.Types.BOOL)
+                                code.addInst(OpCode.RD, 1);
+                        else if (simb.type == Symbol.Types.CHAR)
+                                code.addInst(OpCode.RD, 0);
+                        else
+                                ErrorSemantico.deteccion("En readln(), la variable " + token.image + " no es de tipo entero, char, string o bool", token);
                 }
                 catch(SymbolNotFoundException e)
                 {
-                        type = Symbol.Types.UNDEFINED;
                         ErrorSemantico.deteccion(e, token);
                 }
-
-                if (type != Symbol.Types.INT && type != Symbol.Types.CHAR && type != Symbol.Types.BOOL)
-                        ErrorSemantico.deteccion("En readln(), la variable " + token.image + " no es de tipo entero, char, string o bool", token);
       break;
     default:
       jj_la1[11] = jj_gen;
@@ -452,18 +467,33 @@ public class clike implements clikeConstants {
       jj_consume_token(tCOMMA);
       token = jj_consume_token(tID);
                 try {
-                        type = tablaSimbolos.getSymbol(token.image).type;
+                        simb = tablaSimbolos.getSymbol(token.image);
+
+                        if (simb.type != Symbol.Types.INT && simb.type != Symbol.Types.CHAR && simb.type != Symbol.Types.BOOL)
+                        ErrorSemantico.deteccion("En readln(), la variable " + token.image + " no es de tipo entero, char, string o bool", token);
+                        code.addInst(OpCode.STC, (int)simb.dir);
+                        if (simb.type == Symbol.Types.INT || simb.type == Symbol.Types.BOOL)
+                                code.addInst(OpCode.RD, 1);
+                        else if (simb.type == Symbol.Types.CHAR)
+                                code.addInst(OpCode.RD, 0);
+                        else
+                                ErrorSemantico.deteccion("En readln(), la variable " + token.image + " no es de tipo entero, char, string o bool", token);
                 }
                 catch(SymbolNotFoundException e)
                 {
-                        type = Symbol.Types.UNDEFINED;
                         ErrorSemantico.deteccion(e, token);
                 }
-
-                if (type != Symbol.Types.INT && type != Symbol.Types.CHAR && type != Symbol.Types.BOOL)
-                        ErrorSemantico.deteccion("En readln(), la variable " + token.image + " no es de tipo entero, char, string o bool", token);
     }
     jj_consume_token(tCP);
+                if (simb != null){
+                        code.addLabel("READLNLOOP" + simb.dir);
+                        code.addInst(OpCode.RD, 0);
+                        code.addInst(OpCode.STC, '\n');
+                        code.addInst(OpCode.NEQ);
+                        code.addInst(OpCode.JMT, "READLNLOOP" + simb.dir);
+                }
+                // Añadimos bucle hasta detectar salto de línea
+
   }
 
   static final public void inst_escribir() throws ParseException {
@@ -1279,8 +1309,32 @@ public class clike implements clikeConstants {
     return false;
   }
 
+  static private boolean jj_3_6() {
+    if (jj_scan_token(tID)) return true;
+    if (jj_scan_token(tACOR)) return true;
+    return false;
+  }
+
+  static private boolean jj_3_5() {
+    if (jj_3R_14()) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_17() {
+    if (jj_3R_22()) return true;
+    Token xsp;
+    xsp = jj_scanpos;
+    if (jj_3R_23()) jj_scanpos = xsp;
+    return false;
+  }
+
   static private boolean jj_3R_21() {
     if (jj_scan_token(tVOID)) return true;
+    return false;
+  }
+
+  static private boolean jj_3_3() {
+    if (jj_3R_14()) return true;
     return false;
   }
 
@@ -1311,11 +1365,14 @@ public class clike implements clikeConstants {
     return false;
   }
 
-  static private boolean jj_3R_17() {
-    if (jj_3R_22()) return true;
-    Token xsp;
-    xsp = jj_scanpos;
-    if (jj_3R_23()) jj_scanpos = xsp;
+  static private boolean jj_3R_23() {
+    if (jj_scan_token(tCOMMA)) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_13() {
+    if (jj_3R_16()) return true;
+    if (jj_scan_token(tID)) return true;
     return false;
   }
 
@@ -1340,22 +1397,6 @@ public class clike implements clikeConstants {
     return false;
   }
 
-  static private boolean jj_3_3() {
-    if (jj_3R_14()) return true;
-    return false;
-  }
-
-  static private boolean jj_3R_23() {
-    if (jj_scan_token(tCOMMA)) return true;
-    return false;
-  }
-
-  static private boolean jj_3R_13() {
-    if (jj_3R_16()) return true;
-    if (jj_scan_token(tID)) return true;
-    return false;
-  }
-
   static private boolean jj_3R_24() {
     if (jj_scan_token(tACOR)) return true;
     return false;
@@ -1364,17 +1405,6 @@ public class clike implements clikeConstants {
   static private boolean jj_3R_12() {
     if (jj_3R_16()) return true;
     if (jj_3R_17()) return true;
-    return false;
-  }
-
-  static private boolean jj_3_6() {
-    if (jj_scan_token(tID)) return true;
-    if (jj_scan_token(tACOR)) return true;
-    return false;
-  }
-
-  static private boolean jj_3_5() {
-    if (jj_3R_14()) return true;
     return false;
   }
 

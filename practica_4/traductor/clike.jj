@@ -300,6 +300,14 @@ SPECIAL_TOKEN : {
 void Programa() : 
 {
 	code.addInst(OpCode.ENP, "MAIN");
+	
+	Symbol temp_bin = new SymbolInt("compiler_temporal_int");
+	try {
+		tablaSimbolos.insertSymbol(temp_bin);
+	}
+	catch (AlreadyDefinedSymbolException e) {
+		System.err.println("ERROR INTERNO, el identificador compiler_temporal_int ya está declarado");
+	}
 }
 {
 	( declaracion() )*
@@ -638,13 +646,17 @@ void inst_leer_linea() :
 	)*
 	< tCP >
 	{
-		if (simb != null){
-			code.addLabel("READLNLOOP" + simb.dir);
-			code.addInst(OpCode.RD, 0);
-			code.addInst(OpCode.STC, '\n');
-			code.addInst(OpCode.NEQ);
-			code.addInst(OpCode.JMT, "READLNLOOP" + simb.dir);
-		}
+		Symbol simb_bin = tablaSimbolos.getSymbol("compiler_temporal_int");
+		code.addLabel("READLNLOOP" + simb_bin.dir);
+		code.addInst(OpCode.STC, (int)simb_bin.dir);
+		code.addInst(OpCode.RD, 0);
+
+		code.addInst(OpCode.STC, (int)simb_bin.dir);
+		code.addInst(OpCode.DRF);
+
+		code.addInst(OpCode.STC, '\n');
+		code.addInst(OpCode.NEQ);
+		code.addInst(OpCode.JMT, "READLNLOOP" + simb_bin.dir);
 		// Añadimos bucle hasta detectar salto de línea
 
 	}

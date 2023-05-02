@@ -1,6 +1,6 @@
 Manifest-Version: 1.0
-Ant-Version: Apache Ant 1.10.7
-Created-By: 11.0.17+8-post-Ubuntu-1ubuntu220.04 (Ubuntu)
+Ant-Version: Apache Ant 1.10.12
+Created-By: 11.0.18+10-post-Ubuntu-0ubuntu122.04 (Ubuntu)
 Main-Class: traductor/clike
 Class-Path: traductor/clike.jar
 

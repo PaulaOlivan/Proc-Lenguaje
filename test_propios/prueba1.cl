@@ -1,8 +1,8 @@
 void main()
 {
-    int i;
+    char i;
 
-    read(i);
+    read_ln(i);
 
     print_ln(i);
 }

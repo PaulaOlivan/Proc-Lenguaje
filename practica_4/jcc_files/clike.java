@@ -65,6 +65,14 @@ public class clike implements clikeConstants {
 //------------ Símbolo inicial de la gramática. Para análisis léxico no hace falta más
   static final public void Programa() throws ParseException {
         code.addInst(OpCode.ENP, "MAIN");
+
+        Symbol temp_bin = new SymbolInt("compiler_temporal_int");
+        try {
+                tablaSimbolos.insertSymbol(temp_bin);
+        }
+        catch (AlreadyDefinedSymbolException e) {
+                System.err.println("ERROR INTERNO, el identificador compiler_temporal_int ya est\u00e1 declarado");
+        }
     label_1:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -485,13 +493,17 @@ public class clike implements clikeConstants {
                 }
     }
     jj_consume_token(tCP);
-                if (simb != null){
-                        code.addLabel("READLNLOOP" + simb.dir);
-                        code.addInst(OpCode.RD, 0);
-                        code.addInst(OpCode.STC, '\n');
-                        code.addInst(OpCode.NEQ);
-                        code.addInst(OpCode.JMT, "READLNLOOP" + simb.dir);
-                }
+                Symbol simb_bin = tablaSimbolos.getSymbol("compiler_temporal_int");
+                code.addLabel("READLNLOOP" + simb_bin.dir);
+                code.addInst(OpCode.STC, (int)simb_bin.dir);
+                code.addInst(OpCode.RD, 0);
+
+                code.addInst(OpCode.STC, (int)simb_bin.dir);
+                code.addInst(OpCode.DRF);
+
+                code.addInst(OpCode.STC, '\n');
+                code.addInst(OpCode.NEQ);
+                code.addInst(OpCode.JMT, "READLNLOOP" + simb_bin.dir);
                 // Añadimos bucle hasta detectar salto de línea
 
   }
@@ -1295,31 +1307,6 @@ public class clike implements clikeConstants {
     finally { jj_save(5, xla); }
   }
 
-  static private boolean jj_3R_22() {
-    if (jj_scan_token(tID)) return true;
-    Token xsp;
-    xsp = jj_scanpos;
-    if (jj_3R_24()) jj_scanpos = xsp;
-    return false;
-  }
-
-  static private boolean jj_3_1() {
-    if (jj_3R_12()) return true;
-    if (jj_scan_token(tPC)) return true;
-    return false;
-  }
-
-  static private boolean jj_3_6() {
-    if (jj_scan_token(tID)) return true;
-    if (jj_scan_token(tACOR)) return true;
-    return false;
-  }
-
-  static private boolean jj_3_5() {
-    if (jj_3R_14()) return true;
-    return false;
-  }
-
   static private boolean jj_3R_17() {
     if (jj_3R_22()) return true;
     Token xsp;
@@ -1330,11 +1317,6 @@ public class clike implements clikeConstants {
 
   static private boolean jj_3R_21() {
     if (jj_scan_token(tVOID)) return true;
-    return false;
-  }
-
-  static private boolean jj_3_3() {
-    if (jj_3R_14()) return true;
     return false;
   }
 
@@ -1354,6 +1336,11 @@ public class clike implements clikeConstants {
     return false;
   }
 
+  static private boolean jj_3_3() {
+    if (jj_3R_14()) return true;
+    return false;
+  }
+
   static private boolean jj_3R_14() {
     if (jj_scan_token(tID)) return true;
     if (jj_scan_token(tAP)) return true;
@@ -1362,17 +1349,6 @@ public class clike implements clikeConstants {
 
   static private boolean jj_3R_19() {
     if (jj_scan_token(tCHAR)) return true;
-    return false;
-  }
-
-  static private boolean jj_3R_23() {
-    if (jj_scan_token(tCOMMA)) return true;
-    return false;
-  }
-
-  static private boolean jj_3R_13() {
-    if (jj_3R_16()) return true;
-    if (jj_scan_token(tID)) return true;
     return false;
   }
 
@@ -1397,6 +1373,17 @@ public class clike implements clikeConstants {
     return false;
   }
 
+  static private boolean jj_3R_23() {
+    if (jj_scan_token(tCOMMA)) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_13() {
+    if (jj_3R_16()) return true;
+    if (jj_scan_token(tID)) return true;
+    return false;
+  }
+
   static private boolean jj_3R_24() {
     if (jj_scan_token(tACOR)) return true;
     return false;
@@ -1410,6 +1397,31 @@ public class clike implements clikeConstants {
 
   static private boolean jj_3_2() {
     if (jj_3R_13()) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_22() {
+    if (jj_scan_token(tID)) return true;
+    Token xsp;
+    xsp = jj_scanpos;
+    if (jj_3R_24()) jj_scanpos = xsp;
+    return false;
+  }
+
+  static private boolean jj_3_1() {
+    if (jj_3R_12()) return true;
+    if (jj_scan_token(tPC)) return true;
+    return false;
+  }
+
+  static private boolean jj_3_6() {
+    if (jj_scan_token(tID)) return true;
+    if (jj_scan_token(tACOR)) return true;
+    return false;
+  }
+
+  static private boolean jj_3_5() {
+    if (jj_3R_14()) return true;
     return false;
   }
 

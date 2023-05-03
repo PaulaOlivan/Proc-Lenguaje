@@ -235,6 +235,24 @@ public class clike implements clikeConstants {
         Symbol simbolo;
     tipo = tipo();
     token = jj_consume_token(tID);
+                if (tipo == Symbol.Types.VOID)
+                {
+                        simbolo = new SymbolProcedure(token.image);
+                }
+                else
+                {
+                        simbolo = new SymbolFunction(token.image, tipo);
+                }
+
+                try{
+                        tablaSimbolos.insertSymbol(simbolo);
+                }
+                catch (AlreadyDefinedSymbolException e){
+                        System.out.println(e);
+                }
+
+                tablaSimbolos.insertBlock(token.image);
+                code.addLabel(token.image.toUpperCase());
     jj_consume_token(tAP);
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case tBOOL:
@@ -253,36 +271,19 @@ public class clike implements clikeConstants {
                         parametros = new ArrayList<Symbol>();
                 }
 
-                if (tipo == Symbol.Types.VOID)
-                {
-                        simbolo = new SymbolProcedure(token.image, parametros);
-                }
-                else
-                {
-                        simbolo = new SymbolFunction(token.image, parametros, tipo);
-                }
+                Symbol funcSimb = tablaSimbolos.getSymbol(token.image);
 
-                try{
-                        tablaSimbolos.insertSymbol(simbolo);
-                }
-                catch (AlreadyDefinedSymbolException e){
-                        System.out.println(e);
-                }
-
-                tablaSimbolos.insertBlock();
-
-                for (Symbol simb : parametros)
+                if (funcSimb instanceof SymbolFunction)
                 {
-                        try{
-                                tablaSimbolos.insertSymbol(simb);
-                        }
-                        catch (AlreadyDefinedSymbolException e) {
-                                System.out.println(e+", simbolo "+simb);
-                        }
+                        SymbolFunction func = (SymbolFunction) funcSimb;
+                        func.setParameters(parametros);
+                }
+                else if (funcSimb instanceof SymbolProcedure)
+                {
+                        SymbolProcedure func = (SymbolProcedure) funcSimb;
+                        func.setParameters(parametros);
                 }
     bloque_codigo_con_variables();
-                System.out.println("variables declaradas: ");
-                System.out.println(tablaSimbolos);
                 tablaSimbolos.removeBlock();
   }
 
@@ -300,6 +301,41 @@ public class clike implements clikeConstants {
       ;
     }
                 parametros.add(0, symbol);
+
+                try{
+                        tablaSimbolos.insertSymbol(symbol);
+                }
+                catch (AlreadyDefinedSymbolException e) {
+                        System.out.println(e+", simbolo "+symbol);
+                }
+
+                if (symbol.parClass == Symbol.ParameterClass.REF)       //Nos están apilando la dirección de la variable
+                {
+                        ;//code.addInst(OpCode.LD, symbol.address); //TODO
+                }
+                else
+                {
+                        if (symbol.type == Symbol.Types.ARRAY) //Si es un array, nos apilan la dirección del array (el primer elemento)
+                        {
+                                SymbolArray array = (SymbolArray) symbol;
+                                int arraySize = array.maxInd-array.minInd+1;
+                                int nivelRelativo = tablaSimbolos.level - symbol.nivel; //Para saber el desplazamiento restamos el level donde apuntamos menos el nivel al que queremos ir
+
+                                for (int i = 0; i < arraySize; i++)
+                                {
+                                        code.addInst(OpCode.SRF, nivelRelativo, (int)array.dir+i);                      // Nos apilan el valor de la variable
+                                        code.addInst(OpCode.ASGI);
+                                }
+                        }
+                        else
+                        {
+                                int nivelRelativo = tablaSimbolos.level - symbol.nivel; //Para saber el desplazamiento restamos el level donde apuntamos menos el nivel al que queremos ir
+                                code.addInst(OpCode.SRF, nivelRelativo, (int)symbol.dir);                       // Nos apilan el valor de la variable
+                                code.addInst(OpCode.ASGI);
+                        }
+
+                }
+
                 {if (true) return parametros;}
     throw new Error("Missing return statement in function");
   }
@@ -387,8 +423,9 @@ public class clike implements clikeConstants {
     token = jj_consume_token(tID);
                 try {
                         simb = tablaSimbolos.getSymbol(token.image);
+                        int nivelRelativo = tablaSimbolos.level - simb.nivel;
+                        code.addInst(OpCode.SRF, nivelRelativo, (int)simb.dir);
 
-                        code.addInst(OpCode.STC, (int)simb.dir);
                         if (simb.type == Symbol.Types.INT || simb.type == Symbol.Types.BOOL)
                                 code.addInst(OpCode.RD, 1);
                         else if (simb.type == Symbol.Types.CHAR)
@@ -415,7 +452,9 @@ public class clike implements clikeConstants {
                         try {
                                 simb = tablaSimbolos.getSymbol(token.image);
 
-                                code.addInst(OpCode.STC, (int)simb.dir);
+                                int nivelRelativo = tablaSimbolos.level - simb.nivel;
+                                code.addInst(OpCode.SRF, nivelRelativo, (int)simb.dir);
+
                                 if (simb.type == Symbol.Types.INT || simb.type == Symbol.Types.BOOL)
                                         code.addInst(OpCode.RD, 1);
                                 else if (simb.type == Symbol.Types.CHAR)
@@ -445,7 +484,8 @@ public class clike implements clikeConstants {
                         if (simb.type != Symbol.Types.INT && simb.type != Symbol.Types.CHAR && simb.type != Symbol.Types.BOOL)
                         ErrorSemantico.deteccion("En readln(), la variable " + token.image + " no es de tipo entero, char, string o bool", token);
 
-                        code.addInst(OpCode.STC, (int)simb.dir);
+                        int nivelRelativo = tablaSimbolos.level - simb.nivel;
+                        code.addInst(OpCode.SRF, nivelRelativo, (int)simb.dir);
                         if (simb.type == Symbol.Types.INT || simb.type == Symbol.Types.BOOL)
                                 code.addInst(OpCode.RD, 1);
                         else if (simb.type == Symbol.Types.CHAR)
@@ -479,7 +519,11 @@ public class clike implements clikeConstants {
 
                         if (simb.type != Symbol.Types.INT && simb.type != Symbol.Types.CHAR && simb.type != Symbol.Types.BOOL)
                         ErrorSemantico.deteccion("En readln(), la variable " + token.image + " no es de tipo entero, char, string o bool", token);
-                        code.addInst(OpCode.STC, (int)simb.dir);
+
+
+                        int nivelRelativo = tablaSimbolos.level - simb.nivel;
+                        code.addInst(OpCode.SRF, nivelRelativo, (int)simb.dir);
+
                         if (simb.type == Symbol.Types.INT || simb.type == Symbol.Types.BOOL)
                                 code.addInst(OpCode.RD, 1);
                         else if (simb.type == Symbol.Types.CHAR)
@@ -495,10 +539,12 @@ public class clike implements clikeConstants {
     jj_consume_token(tCP);
                 Symbol simb_bin = tablaSimbolos.getSymbol("compiler_temporal_int");
                 code.addLabel("READLNLOOP" + simb_bin.dir);
-                code.addInst(OpCode.STC, (int)simb_bin.dir);
+
+                int nivelRelativo = tablaSimbolos.level - simb_bin.nivel;
+                code.addInst(OpCode.SRF, nivelRelativo, (int)simb_bin.dir);
                 code.addInst(OpCode.RD, 0);
 
-                code.addInst(OpCode.STC, (int)simb_bin.dir);
+                code.addInst(OpCode.SRF, nivelRelativo, (int)simb_bin.dir);
                 code.addInst(OpCode.DRF);
 
                 code.addInst(OpCode.STC, '\n');
@@ -616,7 +662,8 @@ public class clike implements clikeConstants {
                 if (index == null)
                 {
                         Symbol simbolo = tablaSimbolos.getSymbol(token.image);
-                        code.addInst(OpCode.STC, (int)simbolo.dir);     // Dirección de la variable
+                        int nivelRelativo =  tablaSimbolos.level - simbolo.nivel;
+                        code.addInst(OpCode.SRF, nivelRelativo, (int)simbolo.dir);      // Dirección de la variable
                         {if (true) return simbolo.type;}
                 }
                 else // Nuestro simbolo forma parte de un vector
@@ -629,7 +676,9 @@ public class clike implements clikeConstants {
                         SymbolArray array = (SymbolArray) tablaSimbolos.getSymbol(token.image);
 
                         // Cálculo de dirección del indexado, base+index
-                        code.addInst(OpCode.STC, (int)array.dir);
+
+                        int nivelRelativo = tablaSimbolos.level - array.nivel;
+                        code.addInst(OpCode.SRF, nivelRelativo, (int)array.dir);
                         code.addInst(OpCode.PLUS);
 
                         {if (true) return array.baseType;}
@@ -755,9 +804,33 @@ public class clike implements clikeConstants {
     jj_consume_token(tFBLOQUE);
   }
 
-  static final public void inst_return() throws ParseException {
+  static final public Symbol.Types inst_return() throws ParseException {
+        Symbol.Types type;
     jj_consume_token(tRETURN);
-    expresion();
+    type = expresion();
+                String funcName = tablaSimbolos.getBlockName();
+                Symbol symb = tablaSimbolos.getSymbol(funcName);
+                SymbolFunction simbolFunc = null;
+
+                if (symb == null){
+                        ErrorSemantico.deteccion("El bloque actual no es una funci\u00f3n o procedimiento", token);
+                }
+                else {
+                        if (symb instanceof SymbolFunction)
+                                simbolFunc = (SymbolFunction) symb;
+                        else
+                                ErrorSemantico.deteccion("El bloque actual no admite returns", token);
+                }
+
+
+                if (simbolFunc != null && type != simbolFunc.returnType)
+                {
+                        ErrorSemantico.deteccion("En return, el tipo de la expresi\u00f3n no coincide con el tipo de retorno de la funci\u00f3n", token);
+                }
+
+                code.addInst(OpCode.CSF);
+                {if (true) return type;}
+    throw new Error("Missing return statement in function");
   }
 
   static final public Symbol.Types inst_invoc_proc() throws ParseException {
@@ -799,6 +872,8 @@ public class clike implements clikeConstants {
                         {
                                 ErrorSemantico.deteccion("El identificador " + token.image + " no es una funci\u00f3n ni un procedimiento", token);
                         }
+
+                        code.addOSFInst(tablaSimbolos.getLevelSize(), tablaSimbolos.level+1, SimboloDeFuncion.name.toUpperCase());
                 }
                 catch (SymbolNotFoundException e) {
                         System.out.println(e+", linea "+token.beginLine+", columna "+token.beginColumn);
@@ -1169,12 +1244,20 @@ public class clike implements clikeConstants {
       jj_consume_token(tAP);
       symbolType = expresion();
       jj_consume_token(tCP);
+                        if (symbolType == Symbol.Types.INT)
+                                symbolType = Symbol.Types.CHAR;
+                        else
+                                ErrorSemantico.deteccion("El tipo de la expresi\u00f3n al hacer cast to char debe ser int");
       break;
     case tCHAR2INT:
       jj_consume_token(tCHAR2INT);
       jj_consume_token(tAP);
       symbolType = expresion();
       jj_consume_token(tCP);
+                        if (symbolType == Symbol.Types.CHAR)
+                                symbolType = Symbol.Types.INT;
+                        else
+                                ErrorSemantico.deteccion("El tipo de la expresi\u00f3n al hacer cast to int debe ser char");
       break;
     default:
       jj_la1[35] = jj_gen;
@@ -1203,7 +1286,8 @@ public class clike implements clikeConstants {
                                         symbolType = array.baseType;
 
                                         // Cálculo de dirección del indexado, base+index
-                                        code.addInst(OpCode.STC, (int)array.dir);
+                                        int nivelRelativo = tablaSimbolos.level - array.nivel;
+                                        code.addInst(OpCode.SRF, nivelRelativo, (int)array.dir);
                                         code.addInst(OpCode.PLUS);
                                         code.addInst(OpCode.DRF);       // Carga el valor del elemento en la pila
                                 }
@@ -1214,7 +1298,9 @@ public class clike implements clikeConstants {
           token = jj_consume_token(tID);
                         Symbol simbolo = tablaSimbolos.getSymbol(token.image);
                         symbolType = simbolo.type;
-                        code.addInst(OpCode.STC, (int)simbolo.dir);
+
+                        int nivelRelativo =  tablaSimbolos.level - simbolo.nivel;
+                        code.addInst(OpCode.SRF, nivelRelativo, (int)simbolo.dir);
                         code.addInst(OpCode.DRF);       // Carga el valor de la variable en la pila
 
           break;
@@ -1307,16 +1393,22 @@ public class clike implements clikeConstants {
     finally { jj_save(5, xla); }
   }
 
+  static private boolean jj_3_6() {
+    if (jj_scan_token(tID)) return true;
+    if (jj_scan_token(tACOR)) return true;
+    return false;
+  }
+
+  static private boolean jj_3_5() {
+    if (jj_3R_14()) return true;
+    return false;
+  }
+
   static private boolean jj_3R_17() {
     if (jj_3R_22()) return true;
     Token xsp;
     xsp = jj_scanpos;
     if (jj_3R_23()) jj_scanpos = xsp;
-    return false;
-  }
-
-  static private boolean jj_3R_21() {
-    if (jj_scan_token(tVOID)) return true;
     return false;
   }
 
@@ -1331,8 +1423,14 @@ public class clike implements clikeConstants {
     return false;
   }
 
-  static private boolean jj_3R_20() {
-    if (jj_scan_token(tBOOL)) return true;
+  static private boolean jj_3R_23() {
+    if (jj_scan_token(tCOMMA)) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_13() {
+    if (jj_3R_16()) return true;
+    if (jj_scan_token(tID)) return true;
     return false;
   }
 
@@ -1341,14 +1439,35 @@ public class clike implements clikeConstants {
     return false;
   }
 
-  static private boolean jj_3R_14() {
-    if (jj_scan_token(tID)) return true;
-    if (jj_scan_token(tAP)) return true;
+  static private boolean jj_3R_21() {
+    if (jj_scan_token(tVOID)) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_24() {
+    if (jj_scan_token(tACOR)) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_12() {
+    if (jj_3R_16()) return true;
+    if (jj_3R_17()) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_20() {
+    if (jj_scan_token(tBOOL)) return true;
     return false;
   }
 
   static private boolean jj_3R_19() {
     if (jj_scan_token(tCHAR)) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_14() {
+    if (jj_scan_token(tID)) return true;
+    if (jj_scan_token(tAP)) return true;
     return false;
   }
 
@@ -1373,28 +1492,6 @@ public class clike implements clikeConstants {
     return false;
   }
 
-  static private boolean jj_3R_23() {
-    if (jj_scan_token(tCOMMA)) return true;
-    return false;
-  }
-
-  static private boolean jj_3R_13() {
-    if (jj_3R_16()) return true;
-    if (jj_scan_token(tID)) return true;
-    return false;
-  }
-
-  static private boolean jj_3R_24() {
-    if (jj_scan_token(tACOR)) return true;
-    return false;
-  }
-
-  static private boolean jj_3R_12() {
-    if (jj_3R_16()) return true;
-    if (jj_3R_17()) return true;
-    return false;
-  }
-
   static private boolean jj_3_2() {
     if (jj_3R_13()) return true;
     return false;
@@ -1411,17 +1508,6 @@ public class clike implements clikeConstants {
   static private boolean jj_3_1() {
     if (jj_3R_12()) return true;
     if (jj_scan_token(tPC)) return true;
-    return false;
-  }
-
-  static private boolean jj_3_6() {
-    if (jj_scan_token(tID)) return true;
-    if (jj_scan_token(tACOR)) return true;
-    return false;
-  }
-
-  static private boolean jj_3_5() {
-    if (jj_3R_14()) return true;
     return false;
   }
 

@@ -27,6 +27,12 @@ public class SymbolFunction extends Symbol implements Cloneable {
         returnType = _returnType;
     }
 
+    public SymbolFunction(String _name, Types _returnType){
+        super(_name, Types.FUNCTION);
+        parList = null;
+        returnType = _returnType;
+    }
+
     public String toString() {
         return "(" + name + "," + type + "," + parList + "," + returnType + "," + parClass + "," + nivel + ")";
     }
@@ -35,5 +41,9 @@ public class SymbolFunction extends Symbol implements Cloneable {
     	SymbolFunction newSymbolFunction = (SymbolFunction) super.clone();
     	newSymbolFunction.parList = new ArrayList<Symbol> (parList); 
     	return newSymbolFunction; 
+    }
+
+    public void setParameters(ArrayList<Symbol> _parList){
+        parList = _parList;
     }
 }

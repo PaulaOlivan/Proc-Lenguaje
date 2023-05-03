@@ -32,6 +32,7 @@ public class SymbolTable {
     private ArrayList<HashMap<String, Symbol>> st;
     private Set<String> reservedWords;
     public ArrayList<Integer> topDir;
+    private ArrayList<String> blockName;
 
     public int level; //nivel actual
 
@@ -39,10 +40,12 @@ public class SymbolTable {
         st = new ArrayList<HashMap<String, Symbol>>(ST_SIZE);
         level = -1; //aún no hay ningún bloque intoducido
 
+        blockName = new ArrayList<String>();
+
         topDir = new ArrayList<Integer>();
         topDir.add(2);
 
-        insertBlock();
+        insertBlock("Global");
         reservedWords = new HashSet<String> ();
     }
 
@@ -50,18 +53,21 @@ public class SymbolTable {
     	st = new ArrayList<HashMap<String, Symbol>>(ST_SIZE);
         level = -1; //aún no hay ningún bloque introducido
 
+        blockName = new ArrayList<String>();
+
         topDir = new ArrayList<Integer>();
         topDir.add(2);
 
-        insertBlock();
+        insertBlock("Global");
         reservedWords = new HashSet<String>(Arrays.asList(pals));
     }
     
     //apila un nuevo bloque, para añadir ámbitos de variables
-    public void insertBlock() {
+    public void insertBlock(String name) {
         st.add(new HashMap<String, Symbol>(HASH_SIZE));
-        level++;
         topDir.add(2);
+        level++;
+        blockName.add(name);
     }
 
     //elimina un bloque
@@ -69,6 +75,11 @@ public class SymbolTable {
         st.remove(st.size()-1);
         level--;
         topDir.remove(topDir.size()-1);
+        blockName.remove(blockName.size()-1);
+    }
+
+    public String getBlockName() {
+        return blockName.get(level);
     }
 
     //inserta las palabras reservadas, sustituyendo el anterior contenido
@@ -164,5 +175,9 @@ public class SymbolTable {
         }
         builder.append(linea); 
         return builder.toString();
+    }
+
+    public Integer getLevelSize(){
+        return topDir.get(level)+1;
     }
 }

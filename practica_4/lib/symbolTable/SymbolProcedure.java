@@ -23,6 +23,12 @@ public class SymbolProcedure extends Symbol implements Cloneable {
         parList = _parList;
     }
 
+    public SymbolProcedure(String _name) {
+        super(_name, Types.PROCEDURE);
+        parList = null;
+
+    }
+
     public String toString() {
         return "(" + name + "," + type + "," + parList + "," + nivel + ")";
     }
@@ -31,6 +37,10 @@ public class SymbolProcedure extends Symbol implements Cloneable {
     	SymbolProcedure newSymbolProcedure = (SymbolProcedure) super.clone();
     	newSymbolProcedure.parList = new ArrayList<Symbol> (parList); 
     	return newSymbolProcedure;
+    }
+
+    public void setParameters (ArrayList<Symbol> _parList){
+        parList = _parList;
     }
     
 }

@@ -174,10 +174,7 @@ public class SymbolTable {
             }
         }
         builder.append(linea); 
+        builder.append("Variable tope: "+getTopDir()+"\n");
         return builder.toString();
-    }
-
-    public Integer getLevelSize(){
-        return topDir.get(level)+1;
     }
 }

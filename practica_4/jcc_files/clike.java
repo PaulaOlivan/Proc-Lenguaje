@@ -311,7 +311,7 @@ public class clike implements clikeConstants {
 
                 if (symbol.parClass == Symbol.ParameterClass.REF)       //Nos están apilando la dirección de la variable
                 {
-                        ;//code.addInst(OpCode.LD, symbol.address); //TODO
+
                 }
                 else
                 {
@@ -323,7 +323,7 @@ public class clike implements clikeConstants {
 
                                 for (int i = 0; i < arraySize; i++)
                                 {
-                                        code.addInst(OpCode.SRF, nivelRelativo, (int)array.dir+i);                      // Nos apilan el valor de la variable
+                                        code.addInst(OpCode.SRF, nivelRelativo, (int)array.dir+i);              // Nos apilan el valor de la variable
                                         code.addInst(OpCode.ASGI);
                                 }
                         }
@@ -687,20 +687,29 @@ public class clike implements clikeConstants {
   }
 
   static final public void inst_seleccion() throws ParseException {
+        String label;
+        String labelEnd = "ENDCONDITIONAL" + CGUtils.newLabel();
     jj_consume_token(tIF);
     jj_consume_token(tAP);
     expresion();
     jj_consume_token(tCP);
+                label = "ENDIF" + CGUtils.newLabel();
+                code.addInst(OpCode.JMF, label);
     bloque_codigo();
+                code.addInst(OpCode.JMP, labelEnd);
+                code.addLabel(label);
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case tELSE:
       if (jj_2_4(2)) {
-        bloque_else_ifs();
+        bloque_else_ifs(labelEnd);
       } else {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case tELSE:
           jj_consume_token(tELSE);
+                        label = "ENDELSE" + CGUtils.newLabel();
           bloque_codigo();
+                        code.addLabel(label);
+                        code.addLabel(labelEnd);
           break;
         default:
           jj_la1[17] = jj_gen;
@@ -715,16 +724,21 @@ public class clike implements clikeConstants {
     }
   }
 
-  static final public void bloque_else_ifs() throws ParseException {
+  static final public void bloque_else_ifs(String labelEnd) throws ParseException {
+        String label;
     jj_consume_token(tELSE);
     jj_consume_token(tIF);
     jj_consume_token(tAP);
     expresion();
     jj_consume_token(tCP);
+                label = "ENDELSEIF" + CGUtils.newLabel();
+                code.addInst(OpCode.JMF, label);
     bloque_codigo();
+                code.addInst(OpCode.JMP, labelEnd);
+                code.addLabel(label);
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case tELSE:
-      bloque_else_ifs();
+      bloque_else_ifs(labelEnd);
       break;
     default:
       jj_la1[19] = jj_gen;
@@ -873,7 +887,7 @@ public class clike implements clikeConstants {
                                 ErrorSemantico.deteccion("El identificador " + token.image + " no es una funci\u00f3n ni un procedimiento", token);
                         }
 
-                        code.addOSFInst(tablaSimbolos.getLevelSize(), tablaSimbolos.level+1, SimboloDeFuncion.name.toUpperCase());
+                        code.addOSFInst(tablaSimbolos.getTopDir(), tablaSimbolos.level, SimboloDeFuncion.name.toUpperCase());
                 }
                 catch (SymbolNotFoundException e) {
                         System.out.println(e+", linea "+token.beginLine+", columna "+token.beginColumn);
@@ -919,20 +933,19 @@ public class clike implements clikeConstants {
       }
       token = and_or();
       factor2Type = relacion();
+                if (factor1Type != Symbol.Types.BOOL || factor2Type!= Symbol.Types.BOOL)
+                {
+                        ErrorSemantico.deteccion("En operaci\u00f3n l\u00f3gica, los operandos deben ser de tipo bool ("+
+                                                                        factor1Type+", "+factor2Type+")");
+                }
+
+                if (token == "&&")
+                        code.addInst(OpCode.AND);
+                else
+                        code.addInst(OpCode.OR);
     }
                 if (factor2Type != null)
                 {
-                        if (factor1Type != Symbol.Types.BOOL || factor2Type!= Symbol.Types.BOOL)
-                        {
-                                ErrorSemantico.deteccion("En operaci\u00f3n l\u00f3gica, los operandos deben ser de tipo bool ("+
-                                                                                factor1Type+", "+factor2Type+")");
-                        }
-
-                        if (token == "&&")
-                                code.addInst(OpCode.AND);
-                        else
-                                code.addInst(OpCode.OR);
-
                         {if (true) return Symbol.Types.BOOL;}
                 }
                 else
@@ -974,13 +987,6 @@ public class clike implements clikeConstants {
     case tIG:
       token = operador_relacional();
       factor2Type = expresion_simple();
-      break;
-    default:
-      jj_la1[27] = jj_gen;
-      ;
-    }
-                if (factor2Type != null)
-                {
                         if (factor1Type != factor2Type)
                         {
                                 ErrorSemantico.deteccion("En relacion,los operandos deben ser del mismo tipo ("+
@@ -999,7 +1005,13 @@ public class clike implements clikeConstants {
                                 code.addInst(OpCode.GTE);
                         else if (token == "!=")
                                 code.addInst(OpCode.NEQ);
-
+      break;
+    default:
+      jj_la1[27] = jj_gen;
+      ;
+    }
+                if (factor2Type != null)
+                {
                         {if (true) return Symbol.Types.BOOL;}
                 }
                 else
@@ -1061,9 +1073,6 @@ public class clike implements clikeConstants {
       }
       token = op_MAS_MENOS();
       factor2Type = termino();
-    }
-                if (factor2Type != null)
-                {
                         if (factor1Type != factor2Type)
                         {
                                 ErrorSemantico.deteccion("En expresi\u00f3n simple, los operandos deben ser del mismo tipo");
@@ -1073,7 +1082,9 @@ public class clike implements clikeConstants {
                                 code.addInst(OpCode.PLUS);
                         else
                                 code.addInst(OpCode.SBT);
-
+    }
+                if (factor2Type != null)
+                {
                         {if (true) return factor1Type;}
                 }
                 else
@@ -1146,9 +1157,6 @@ public class clike implements clikeConstants {
       }
       token = op_MULT();
       factor2Type = factor();
-    }
-                if (factor2Type != null)
-                {
                         if (factor1Type != factor2Type)
                         {
                                 ErrorSemantico.deteccion("En termino, los operandos deben ser del mismo tipo");
@@ -1160,7 +1168,9 @@ public class clike implements clikeConstants {
                                 code.addInst(OpCode.DIV);
                         else
                                 code.addInst(OpCode.MOD);
-
+    }
+                if (factor2Type != null)
+                {
                         {if (true) return factor1Type;}
                 }
                 else
@@ -1212,20 +1222,16 @@ public class clike implements clikeConstants {
     case tNOT:
       token = operador_not();
       factorType = primario();
+                        if (token == "!")
+                                code.addInst(OpCode.NGB);
+                        else
+                                code.addInst(OpCode.NGI);
       break;
     default:
       jj_la1[34] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
-                if (token != null)
-                {
-                        if (token == "!")
-                                code.addInst(OpCode.NGB);
-                        else
-                                code.addInst(OpCode.NGI);
-                }
-
                 {if (true) return factorType;}
     throw new Error("Missing return statement in function");
   }
@@ -1393,81 +1399,8 @@ public class clike implements clikeConstants {
     finally { jj_save(5, xla); }
   }
 
-  static private boolean jj_3_6() {
-    if (jj_scan_token(tID)) return true;
-    if (jj_scan_token(tACOR)) return true;
-    return false;
-  }
-
-  static private boolean jj_3_5() {
-    if (jj_3R_14()) return true;
-    return false;
-  }
-
-  static private boolean jj_3R_17() {
-    if (jj_3R_22()) return true;
-    Token xsp;
-    xsp = jj_scanpos;
-    if (jj_3R_23()) jj_scanpos = xsp;
-    return false;
-  }
-
-  static private boolean jj_3R_15() {
-    if (jj_scan_token(tELSE)) return true;
-    if (jj_scan_token(tIF)) return true;
-    return false;
-  }
-
-  static private boolean jj_3_4() {
-    if (jj_3R_15()) return true;
-    return false;
-  }
-
-  static private boolean jj_3R_23() {
-    if (jj_scan_token(tCOMMA)) return true;
-    return false;
-  }
-
-  static private boolean jj_3R_13() {
-    if (jj_3R_16()) return true;
-    if (jj_scan_token(tID)) return true;
-    return false;
-  }
-
-  static private boolean jj_3_3() {
-    if (jj_3R_14()) return true;
-    return false;
-  }
-
-  static private boolean jj_3R_21() {
-    if (jj_scan_token(tVOID)) return true;
-    return false;
-  }
-
-  static private boolean jj_3R_24() {
-    if (jj_scan_token(tACOR)) return true;
-    return false;
-  }
-
-  static private boolean jj_3R_12() {
-    if (jj_3R_16()) return true;
-    if (jj_3R_17()) return true;
-    return false;
-  }
-
-  static private boolean jj_3R_20() {
-    if (jj_scan_token(tBOOL)) return true;
-    return false;
-  }
-
   static private boolean jj_3R_19() {
     if (jj_scan_token(tCHAR)) return true;
-    return false;
-  }
-
-  static private boolean jj_3R_14() {
-    if (jj_scan_token(tID)) return true;
-    if (jj_scan_token(tAP)) return true;
     return false;
   }
 
@@ -1492,8 +1425,71 @@ public class clike implements clikeConstants {
     return false;
   }
 
+  static private boolean jj_3R_14() {
+    if (jj_scan_token(tID)) return true;
+    if (jj_scan_token(tAP)) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_17() {
+    if (jj_3R_22()) return true;
+    Token xsp;
+    xsp = jj_scanpos;
+    if (jj_3R_23()) jj_scanpos = xsp;
+    return false;
+  }
+
+  static private boolean jj_3_6() {
+    if (jj_scan_token(tID)) return true;
+    if (jj_scan_token(tACOR)) return true;
+    return false;
+  }
+
+  static private boolean jj_3_5() {
+    if (jj_3R_14()) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_23() {
+    if (jj_scan_token(tCOMMA)) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_13() {
+    if (jj_3R_16()) return true;
+    if (jj_scan_token(tID)) return true;
+    return false;
+  }
+
+  static private boolean jj_3_3() {
+    if (jj_3R_14()) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_24() {
+    if (jj_scan_token(tACOR)) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_12() {
+    if (jj_3R_16()) return true;
+    if (jj_3R_17()) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_15() {
+    if (jj_scan_token(tELSE)) return true;
+    if (jj_scan_token(tIF)) return true;
+    return false;
+  }
+
   static private boolean jj_3_2() {
     if (jj_3R_13()) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_21() {
+    if (jj_scan_token(tVOID)) return true;
     return false;
   }
 
@@ -1508,6 +1504,16 @@ public class clike implements clikeConstants {
   static private boolean jj_3_1() {
     if (jj_3R_12()) return true;
     if (jj_scan_token(tPC)) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_20() {
+    if (jj_scan_token(tBOOL)) return true;
+    return false;
+  }
+
+  static private boolean jj_3_4() {
+    if (jj_3R_15()) return true;
     return false;
   }
 

@@ -513,7 +513,7 @@ ArrayList<Symbol> declaracion_parametros() :
 
 		if (symbol.parClass == Symbol.ParameterClass.REF) 	//Nos están apilando la dirección de la variable
 		{
-			;//code.addInst(OpCode.LD, symbol.address); //TODO
+			
 		}
 		else
 		{
@@ -525,7 +525,7 @@ ArrayList<Symbol> declaracion_parametros() :
 				
 				for (int i = 0; i < arraySize; i++)
 				{
-					code.addInst(OpCode.SRF, nivelRelativo, (int)array.dir+i);			// Nos apilan el valor de la variable
+					code.addInst(OpCode.SRF, nivelRelativo, (int)array.dir+i);		// Nos apilan el valor de la variable
 					code.addInst(OpCode.ASGI);
 				}
 			}
@@ -721,7 +721,8 @@ void inst_escribir() :
 }
 
 void inst_escribir_linea() :
-{}
+{
+}
 {
 	(
 	< tPRINTLN >
@@ -810,23 +811,52 @@ Symbol.Types asignable() :
 }
 
 void inst_seleccion() :
-{}
 {
-	< tIF > < tAP > expresion() < tCP > bloque_codigo()
+	String label;
+	String labelEnd = "ENDCONDITIONAL" + CGUtils.newLabel();
+}
+{
+	< tIF > < tAP > expresion() < tCP >
+	{
+		label = "ENDIF" + CGUtils.newLabel();
+		code.addInst(OpCode.JMF, label);
+	} 
+	bloque_codigo()
+	{ 
+		code.addInst(OpCode.JMP, labelEnd);
+		code.addLabel(label); 
+	}
 	(
 		LOOKAHEAD(2)
-		bloque_else_ifs()
-	| < tELSE > bloque_codigo() 
+		bloque_else_ifs(labelEnd)
+	| < tELSE > 
+		{
+			label = "ENDELSE" + CGUtils.newLabel();
+		} 
+		bloque_codigo() 
+		{ 
+			code.addLabel(label);
+			code.addLabel(labelEnd);
+		}
 	)?
-
 }
 
-void bloque_else_ifs():
-{}
+void bloque_else_ifs(String labelEnd):
+{
+	String label;
+}
 {
 	< tELSE > < tIF > < tAP > expresion() < tCP > 
+	{
+		label = "ENDELSEIF" + CGUtils.newLabel();
+		code.addInst(OpCode.JMF, label);
+	} 
 	bloque_codigo() 
-	(bloque_else_ifs())?
+	{
+		code.addInst(OpCode.JMP, labelEnd); 
+		code.addLabel(label); 
+	}
+	(bloque_else_ifs(labelEnd))?
 
 }
 
@@ -912,8 +942,8 @@ Symbol.Types inst_invoc_proc() :
 			{
 				ErrorSemantico.deteccion("El identificador " + token.image + " no es una función ni un procedimiento", token);
 			}
-
-			code.addOSFInst(tablaSimbolos.getLevelSize(), tablaSimbolos.level+1, SimboloDeFuncion.name.toUpperCase());
+			
+			code.addOSFInst(tablaSimbolos.getTopDir(), tablaSimbolos.level, SimboloDeFuncion.name.toUpperCase());
 		}	
 		catch (SymbolNotFoundException e) {
 			System.out.println(e+", linea "+token.beginLine+", columna "+token.beginColumn);
@@ -938,22 +968,24 @@ Symbol.Types expresion() :
 }
 {
 	factor1Type = relacion()
- 	(token = and_or() factor2Type = relacion())*
+ 	(token = and_or() factor2Type = relacion()
+	{
+		if (factor1Type != Symbol.Types.BOOL || factor2Type!= Symbol.Types.BOOL)
+		{
+			ErrorSemantico.deteccion("En operación lógica, los operandos deben ser de tipo bool ("+
+									factor1Type+", "+factor2Type+")");
+		}
+		
+		if (token == "&&")
+			code.addInst(OpCode.AND);
+		else
+			code.addInst(OpCode.OR);
+	}
+	)*
 	{
 		if (factor2Type != null)
 		{
-			if (factor1Type != Symbol.Types.BOOL || factor2Type!= Symbol.Types.BOOL)
-			{
-				ErrorSemantico.deteccion("En operación lógica, los operandos deben ser de tipo bool ("+
-										factor1Type+", "+factor2Type+")");
-			}
-			
-			if (token == "&&")
-				code.addInst(OpCode.AND);
-			else
-				code.addInst(OpCode.OR);
-
-			return Symbol.Types.BOOL;
+			return Symbol.Types.BOOL;			
 		}
 		else
 		{
@@ -983,9 +1015,6 @@ Symbol.Types relacion() :
 	( 
 		token = operador_relacional()
 		factor2Type = expresion_simple()
-	)?
-	{
-		if (factor2Type != null)
 		{
 			if (factor1Type != factor2Type)
 			{
@@ -1005,7 +1034,11 @@ Symbol.Types relacion() :
 				code.addInst(OpCode.GTE);
 			else if (token == "!=")
 				code.addInst(OpCode.NEQ);
-
+		}
+	)?
+	{
+		if (factor2Type != null)
+		{
 			return Symbol.Types.BOOL;
 		}
 		else
@@ -1040,9 +1073,6 @@ Symbol.Types expresion_simple() :
 	( 
 		token = op_MAS_MENOS() 
 		factor2Type = termino()
-	)*
-	{
-		if (factor2Type != null)
 		{
 			if (factor1Type != factor2Type)
 			{
@@ -1053,7 +1083,11 @@ Symbol.Types expresion_simple() :
 				code.addInst(OpCode.PLUS);
 			else
 				code.addInst(OpCode.SBT);
-
+		}
+	)*
+	{
+		if (factor2Type != null)
+		{
 			return factor1Type;
 		}
 		else
@@ -1105,9 +1139,6 @@ Symbol.Types termino() :
 	( 
 		token = op_MULT()
 		factor2Type = factor()
-	)*
-	{
-		if (factor2Type != null)
 		{
 			if (factor1Type != factor2Type)
 			{
@@ -1120,7 +1151,11 @@ Symbol.Types termino() :
 				code.addInst(OpCode.DIV);
 			else
 				code.addInst(OpCode.MOD);
-
+		}
+	)*
+	{
+		if (factor2Type != null)
+		{
 			return factor1Type;
 		}
 		else
@@ -1153,16 +1188,14 @@ Symbol.Types factor() :
 		factorType = primario()
 		|	token = operador_not()
 		factorType = primario()
-	)
-	{
-		if (token != null)
 		{
 			if (token == "!")
 				code.addInst(OpCode.NGB);
 			else
 				code.addInst(OpCode.NGI);
 		}
-
+	)
+	{
 		return factorType;
 	}
 }
@@ -1200,7 +1233,7 @@ Symbol.Types primario() :
 			else
 			{
 				Symbol arr = tablaSimbolos.getSymbol(token.image);
-				
+
 				if (arr.type != Symbol.Types.ARRAY)
 				{
 					ErrorSemantico.deteccion("El identificador no es un array");

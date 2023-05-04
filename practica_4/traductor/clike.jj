@@ -829,7 +829,8 @@ void inst_seleccion() :
 	(
 		LOOKAHEAD(2)
 		bloque_else_ifs(labelEnd)
-	| < tELSE > 
+		| 
+		< tELSE > 
 		{
 			label = "ENDELSE" + CGUtils.newLabel();
 		} 
@@ -856,7 +857,19 @@ void bloque_else_ifs(String labelEnd):
 		code.addInst(OpCode.JMP, labelEnd); 
 		code.addLabel(label); 
 	}
-	(bloque_else_ifs(labelEnd))?
+	(
+		LOOKAHEAD(2)
+		bloque_else_ifs(labelEnd)
+		| < tELSE > 
+		{
+			label = "ENDELSE" + CGUtils.newLabel();
+		} 
+		bloque_codigo() 
+		{ 
+			code.addLabel(label);
+			code.addLabel(labelEnd);
+		}
+	)?
 
 }
 
@@ -1257,8 +1270,23 @@ Symbol.Types primario() :
 			symbolType = simbolo.type;
 			
 			int nivelRelativo =  tablaSimbolos.level - simbolo.nivel;
-			code.addInst(OpCode.SRF, nivelRelativo, (int)simbolo.dir);
-			code.addInst(OpCode.DRF);	// Carga el valor de la variable en la pila
+			
+			if (symbolType == Symbol.Types.ARRAY)
+			{
+				SymbolArray array = (SymbolArray)simbolo;
+				int arrLen = array.maxInd - array.minInd + 1;
+
+				for (int i = 0; i < arrLen; i++)
+				{
+					code.addInst(OpCode.SRF, nivelRelativo, (int)simbolo.dir + i);
+					code.addInst(OpCode.DRF);	// Carga el valor de la variable en la pila
+				}
+			}
+			else
+			{
+				code.addInst(OpCode.SRF, nivelRelativo, (int)simbolo.dir);
+				code.addInst(OpCode.DRF);	// Carga el valor de la variable en la pila
+			}
 		}
 		|	tokenConst = < tCONST_INT > 
 		{ 

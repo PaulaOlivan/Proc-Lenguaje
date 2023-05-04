@@ -738,10 +738,26 @@ public class clike implements clikeConstants {
                 code.addLabel(label);
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case tELSE:
-      bloque_else_ifs(labelEnd);
+      if (jj_2_5(2)) {
+        bloque_else_ifs(labelEnd);
+      } else {
+        switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+        case tELSE:
+          jj_consume_token(tELSE);
+                        label = "ENDELSE" + CGUtils.newLabel();
+          bloque_codigo();
+                        code.addLabel(label);
+                        code.addLabel(labelEnd);
+          break;
+        default:
+          jj_la1[19] = jj_gen;
+          jj_consume_token(-1);
+          throw new ParseException();
+        }
+      }
       break;
     default:
-      jj_la1[19] = jj_gen;
+      jj_la1[20] = jj_gen;
       ;
     }
   }
@@ -770,7 +786,7 @@ public class clike implements clikeConstants {
         ;
         break;
       default:
-        jj_la1[20] = jj_gen;
+        jj_la1[21] = jj_gen;
         break label_6;
       }
       instruccion();
@@ -790,7 +806,7 @@ public class clike implements clikeConstants {
         ;
         break;
       default:
-        jj_la1[21] = jj_gen;
+        jj_la1[22] = jj_gen;
         break label_7;
       }
       declaracion_variables();
@@ -810,7 +826,7 @@ public class clike implements clikeConstants {
         ;
         break;
       default:
-        jj_la1[22] = jj_gen;
+        jj_la1[23] = jj_gen;
         break label_8;
       }
       instruccion();
@@ -867,7 +883,7 @@ public class clike implements clikeConstants {
       argumentos();
       break;
     default:
-      jj_la1[23] = jj_gen;
+      jj_la1[24] = jj_gen;
       ;
     }
     jj_consume_token(tCP);
@@ -909,7 +925,7 @@ public class clike implements clikeConstants {
                                                                {if (true) return "-";}
       break;
     default:
-      jj_la1[24] = jj_gen;
+      jj_la1[25] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -928,7 +944,7 @@ public class clike implements clikeConstants {
         ;
         break;
       default:
-        jj_la1[25] = jj_gen;
+        jj_la1[26] = jj_gen;
         break label_9;
       }
       token = and_or();
@@ -967,7 +983,7 @@ public class clike implements clikeConstants {
                            {if (true) return "&&";}
       break;
     default:
-      jj_la1[26] = jj_gen;
+      jj_la1[27] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -1007,7 +1023,7 @@ public class clike implements clikeConstants {
                                 code.addInst(OpCode.NEQ);
       break;
     default:
-      jj_la1[27] = jj_gen;
+      jj_la1[28] = jj_gen;
       ;
     }
                 if (factor2Type != null)
@@ -1049,7 +1065,7 @@ public class clike implements clikeConstants {
                            {if (true) return "!=";}
       break;
     default:
-      jj_la1[28] = jj_gen;
+      jj_la1[29] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -1068,7 +1084,7 @@ public class clike implements clikeConstants {
         ;
         break;
       default:
-        jj_la1[29] = jj_gen;
+        jj_la1[30] = jj_gen;
         break label_10;
       }
       token = op_MAS_MENOS();
@@ -1106,7 +1122,7 @@ public class clike implements clikeConstants {
                              {if (true) return "-";}
       break;
     default:
-      jj_la1[30] = jj_gen;
+      jj_la1[31] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -1132,7 +1148,7 @@ public class clike implements clikeConstants {
                 {if (true) return Symbol.Types.VOID;}
       break;
     default:
-      jj_la1[31] = jj_gen;
+      jj_la1[32] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -1152,7 +1168,7 @@ public class clike implements clikeConstants {
         ;
         break;
       default:
-        jj_la1[32] = jj_gen;
+        jj_la1[33] = jj_gen;
         break label_11;
       }
       token = op_MULT();
@@ -1196,7 +1212,7 @@ public class clike implements clikeConstants {
                           {if (true) return "%";}
       break;
     default:
-      jj_la1[33] = jj_gen;
+      jj_la1[34] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -1228,7 +1244,7 @@ public class clike implements clikeConstants {
                                 code.addInst(OpCode.NGI);
       break;
     default:
-      jj_la1[34] = jj_gen;
+      jj_la1[35] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -1266,10 +1282,10 @@ public class clike implements clikeConstants {
                                 ErrorSemantico.deteccion("El tipo de la expresi\u00f3n al hacer cast to int debe ser char");
       break;
     default:
-      jj_la1[35] = jj_gen;
-      if (jj_2_5(2)) {
+      jj_la1[36] = jj_gen;
+      if (jj_2_6(2)) {
         symbolType = inst_invoc_proc();
-      } else if (jj_2_6(2)) {
+      } else if (jj_2_7(2)) {
         token = jj_consume_token(tID);
         jj_consume_token(tACOR);
         symbolType = expresion();
@@ -1306,9 +1322,23 @@ public class clike implements clikeConstants {
                         symbolType = simbolo.type;
 
                         int nivelRelativo =  tablaSimbolos.level - simbolo.nivel;
-                        code.addInst(OpCode.SRF, nivelRelativo, (int)simbolo.dir);
-                        code.addInst(OpCode.DRF);       // Carga el valor de la variable en la pila
 
+                        if (symbolType == Symbol.Types.ARRAY)
+                        {
+                                SymbolArray array = (SymbolArray)simbolo;
+                                int arrLen = array.maxInd - array.minInd + 1;
+
+                                for (int i = 0; i < arrLen; i++)
+                                {
+                                        code.addInst(OpCode.SRF, nivelRelativo, (int)simbolo.dir + i);
+                                        code.addInst(OpCode.DRF);       // Carga el valor de la variable en la pila
+                                }
+                        }
+                        else
+                        {
+                                code.addInst(OpCode.SRF, nivelRelativo, (int)simbolo.dir);
+                                code.addInst(OpCode.DRF);       // Carga el valor de la variable en la pila
+                        }
           break;
         case tCONST_INT:
           tokenConst = jj_consume_token(tCONST_INT);
@@ -1347,7 +1377,7 @@ public class clike implements clikeConstants {
                         code.addInst(OpCode.STC, 0);
           break;
         default:
-          jj_la1[36] = jj_gen;
+          jj_la1[37] = jj_gen;
           jj_consume_token(-1);
           throw new ParseException();
         }
@@ -1399,6 +1429,80 @@ public class clike implements clikeConstants {
     finally { jj_save(5, xla); }
   }
 
+  static private boolean jj_2_7(int xla) {
+    jj_la = xla; jj_lastpos = jj_scanpos = token;
+    try { return !jj_3_7(); }
+    catch(LookaheadSuccess ls) { return true; }
+    finally { jj_save(6, xla); }
+  }
+
+  static private boolean jj_3_7() {
+    if (jj_scan_token(tID)) return true;
+    if (jj_scan_token(tACOR)) return true;
+    return false;
+  }
+
+  static private boolean jj_3_6() {
+    if (jj_3R_14()) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_17() {
+    if (jj_3R_22()) return true;
+    Token xsp;
+    xsp = jj_scanpos;
+    if (jj_3R_23()) jj_scanpos = xsp;
+    return false;
+  }
+
+  static private boolean jj_3_5() {
+    if (jj_3R_15()) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_23() {
+    if (jj_scan_token(tCOMMA)) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_13() {
+    if (jj_3R_16()) return true;
+    if (jj_scan_token(tID)) return true;
+    return false;
+  }
+
+  static private boolean jj_3_3() {
+    if (jj_3R_14()) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_21() {
+    if (jj_scan_token(tVOID)) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_24() {
+    if (jj_scan_token(tACOR)) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_12() {
+    if (jj_3R_16()) return true;
+    if (jj_3R_17()) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_20() {
+    if (jj_scan_token(tBOOL)) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_15() {
+    if (jj_scan_token(tELSE)) return true;
+    if (jj_scan_token(tIF)) return true;
+    return false;
+  }
+
   static private boolean jj_3R_19() {
     if (jj_scan_token(tCHAR)) return true;
     return false;
@@ -1425,71 +1529,8 @@ public class clike implements clikeConstants {
     return false;
   }
 
-  static private boolean jj_3R_14() {
-    if (jj_scan_token(tID)) return true;
-    if (jj_scan_token(tAP)) return true;
-    return false;
-  }
-
-  static private boolean jj_3R_17() {
-    if (jj_3R_22()) return true;
-    Token xsp;
-    xsp = jj_scanpos;
-    if (jj_3R_23()) jj_scanpos = xsp;
-    return false;
-  }
-
-  static private boolean jj_3_6() {
-    if (jj_scan_token(tID)) return true;
-    if (jj_scan_token(tACOR)) return true;
-    return false;
-  }
-
-  static private boolean jj_3_5() {
-    if (jj_3R_14()) return true;
-    return false;
-  }
-
-  static private boolean jj_3R_23() {
-    if (jj_scan_token(tCOMMA)) return true;
-    return false;
-  }
-
-  static private boolean jj_3R_13() {
-    if (jj_3R_16()) return true;
-    if (jj_scan_token(tID)) return true;
-    return false;
-  }
-
-  static private boolean jj_3_3() {
-    if (jj_3R_14()) return true;
-    return false;
-  }
-
-  static private boolean jj_3R_24() {
-    if (jj_scan_token(tACOR)) return true;
-    return false;
-  }
-
-  static private boolean jj_3R_12() {
-    if (jj_3R_16()) return true;
-    if (jj_3R_17()) return true;
-    return false;
-  }
-
-  static private boolean jj_3R_15() {
-    if (jj_scan_token(tELSE)) return true;
-    if (jj_scan_token(tIF)) return true;
-    return false;
-  }
-
   static private boolean jj_3_2() {
     if (jj_3R_13()) return true;
-    return false;
-  }
-
-  static private boolean jj_3R_21() {
-    if (jj_scan_token(tVOID)) return true;
     return false;
   }
 
@@ -1501,14 +1542,15 @@ public class clike implements clikeConstants {
     return false;
   }
 
-  static private boolean jj_3_1() {
-    if (jj_3R_12()) return true;
-    if (jj_scan_token(tPC)) return true;
+  static private boolean jj_3R_14() {
+    if (jj_scan_token(tID)) return true;
+    if (jj_scan_token(tAP)) return true;
     return false;
   }
 
-  static private boolean jj_3R_20() {
-    if (jj_scan_token(tBOOL)) return true;
+  static private boolean jj_3_1() {
+    if (jj_3R_12()) return true;
+    if (jj_scan_token(tPC)) return true;
     return false;
   }
 
@@ -1532,7 +1574,7 @@ public class clike implements clikeConstants {
   static private boolean jj_lookingAhead = false;
   static private boolean jj_semLA;
   static private int jj_gen;
-  static final private int[] jj_la1 = new int[37];
+  static final private int[] jj_la1 = new int[38];
   static private int[] jj_la1_0;
   static private int[] jj_la1_1;
   static {
@@ -1540,12 +1582,12 @@ public class clike implements clikeConstants {
       jj_la1_init_1();
    }
    private static void jj_la1_init_0() {
-      jj_la1_0 = new int[] {0x0,0x0,0x0,0x8000,0x0,0x0,0x0,0x20000,0x0,0x0,0x0,0x0,0x0,0x202000,0x0,0x0,0x8000,0x0,0x0,0x0,0x0,0x0,0x0,0x202000,0x200000,0x80000000,0x80000000,0x7e000000,0x7e000000,0x300000,0x300000,0x0,0x1c00000,0x1c00000,0x202000,0x2000,0x0,};
+      jj_la1_0 = new int[] {0x0,0x0,0x0,0x8000,0x0,0x0,0x0,0x20000,0x0,0x0,0x0,0x0,0x0,0x202000,0x0,0x0,0x8000,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x202000,0x200000,0x80000000,0x80000000,0x7e000000,0x7e000000,0x300000,0x300000,0x0,0x1c00000,0x1c00000,0x202000,0x2000,0x0,};
    }
    private static void jj_la1_init_1() {
-      jj_la1_1 = new int[] {0x4e0,0x4e0,0x100000,0x0,0x4e0,0x4e0,0x100000,0x0,0x7800,0x80800c,0x100000,0x800000,0x100000,0xee0302,0x100000,0x100000,0x0,0x10,0x10,0x10,0x80f80c,0x4e0,0x80f80c,0xee0302,0x2,0x1,0x1,0x0,0x0,0x0,0x0,0x4e0,0x0,0x0,0xee0302,0x60000,0xe80300,};
+      jj_la1_1 = new int[] {0x4e0,0x4e0,0x100000,0x0,0x4e0,0x4e0,0x100000,0x0,0x7800,0x80800c,0x100000,0x800000,0x100000,0xee0302,0x100000,0x100000,0x0,0x10,0x10,0x10,0x10,0x80f80c,0x4e0,0x80f80c,0xee0302,0x2,0x1,0x1,0x0,0x0,0x0,0x0,0x4e0,0x0,0x0,0xee0302,0x60000,0xe80300,};
    }
-  static final private JJCalls[] jj_2_rtns = new JJCalls[6];
+  static final private JJCalls[] jj_2_rtns = new JJCalls[7];
   static private boolean jj_rescan = false;
   static private int jj_gc = 0;
 
@@ -1567,7 +1609,7 @@ public class clike implements clikeConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 37; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 38; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -1582,7 +1624,7 @@ public class clike implements clikeConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 37; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 38; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -1600,7 +1642,7 @@ public class clike implements clikeConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 37; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 38; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -1611,7 +1653,7 @@ public class clike implements clikeConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 37; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 38; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -1628,7 +1670,7 @@ public class clike implements clikeConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 37; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 38; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -1638,7 +1680,7 @@ public class clike implements clikeConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 37; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 38; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -1758,7 +1800,7 @@ public class clike implements clikeConstants {
       la1tokens[jj_kind] = true;
       jj_kind = -1;
     }
-    for (int i = 0; i < 37; i++) {
+    for (int i = 0; i < 38; i++) {
       if (jj_la1[i] == jj_gen) {
         for (int j = 0; j < 32; j++) {
           if ((jj_la1_0[i] & (1<<j)) != 0) {
@@ -1797,7 +1839,7 @@ public class clike implements clikeConstants {
 
   static private void jj_rescan_token() {
     jj_rescan = true;
-    for (int i = 0; i < 6; i++) {
+    for (int i = 0; i < 7; i++) {
     try {
       JJCalls p = jj_2_rtns[i];
       do {
@@ -1810,6 +1852,7 @@ public class clike implements clikeConstants {
             case 3: jj_3_4(); break;
             case 4: jj_3_5(); break;
             case 5: jj_3_6(); break;
+            case 6: jj_3_7(); break;
           }
         }
         p = p.next;

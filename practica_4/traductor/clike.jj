@@ -207,7 +207,7 @@ TOKEN : {
 }
 
 TOKEN : {
-	< tBOOL: 	"bool" > {
+	< tBOOL: 	"Boolean" > {
 							//System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
 							//System.out.println("token " + "\"" + matchedToken + "\"");
 						}
@@ -374,7 +374,9 @@ Symbol decl_1_variable(Symbol.Types type) :
 	id = <tID> (< tACOR > size = < tCONST_INT > < tCCOR >)?
 	{
 		if (size != null)
+		{
 			return new SymbolArray(id.image, 0, Integer.parseInt(size.image)-1, type);
+		}
 		else
 			return Symbol.createNormalSymbol(id.image, type);
 	}
@@ -490,6 +492,11 @@ void declaracion_func_proc() :
 	bloque_codigo_con_variables()
 	{
 		tablaSimbolos.removeBlock();
+
+		if (tipo == Symbol.Types.VOID)
+		{
+			code.addInst(OpCode.CSF);
+		}
 	}
 )
 }
@@ -511,31 +518,23 @@ ArrayList<Symbol> declaracion_parametros() :
 			System.out.println(e+", simbolo "+symbol);
 		}
 
-		if (symbol.parClass == Symbol.ParameterClass.REF) 	//Nos están apilando la dirección de la variable
+		if (symbol.type == Symbol.Types.ARRAY && symbol.parClass == Symbol.ParameterClass.VAL) //Si es un array, nos apilan la dirección del array (el primer elemento)
 		{
+			SymbolArray array = (SymbolArray) symbol;
+			int arraySize = array.maxInd-array.minInd+1;
+			int nivelRelativo = tablaSimbolos.level - symbol.nivel; //Para saber el desplazamiento restamos el level donde apuntamos menos el nivel al que queremos ir
 			
+			for (int i = 0; i < arraySize; i++)
+			{
+				code.addInst(OpCode.SRF, nivelRelativo, (int)array.dir+i);		// Nos apilan el valor de la variable
+				code.addInst(OpCode.ASGI);
+			}
 		}
 		else
 		{
-			if (symbol.type == Symbol.Types.ARRAY) //Si es un array, nos apilan la dirección del array (el primer elemento)
-			{
-				SymbolArray array = (SymbolArray) symbol;
-				int arraySize = array.maxInd-array.minInd+1;
-				int nivelRelativo = tablaSimbolos.level - symbol.nivel; //Para saber el desplazamiento restamos el level donde apuntamos menos el nivel al que queremos ir
-				
-				for (int i = 0; i < arraySize; i++)
-				{
-					code.addInst(OpCode.SRF, nivelRelativo, (int)array.dir+i);		// Nos apilan el valor de la variable
-					code.addInst(OpCode.ASGI);
-				}
-			}
-			else
-			{
-				int nivelRelativo = tablaSimbolos.level - symbol.nivel; //Para saber el desplazamiento restamos el level donde apuntamos menos el nivel al que queremos ir
-				code.addInst(OpCode.SRF, nivelRelativo, (int)symbol.dir);			// Nos apilan el valor de la variable
-				code.addInst(OpCode.ASGI);
-			}
-
+			int nivelRelativo = tablaSimbolos.level - symbol.nivel; //Para saber el desplazamiento restamos el level donde apuntamos menos el nivel al que queremos ir
+			code.addInst(OpCode.SRF, nivelRelativo, (int)symbol.dir);			// Nos apilan el valor de la variable
+			code.addInst(OpCode.ASGI);
 		}
 		
 		return parametros;
@@ -581,51 +580,30 @@ void instruccion() :
 
 void inst_leer() :
 {
-	Token token;
 	Symbol simb;
+	Symbol.Types symbolType = null;
 }
 {
 	< tREAD >
 	< tAP >
-	token = < tID >
+	symbolType = expresion(true)
 	{
-		try {
-			simb = tablaSimbolos.getSymbol(token.image);
-			int nivelRelativo = tablaSimbolos.level - simb.nivel;
-			code.addInst(OpCode.SRF, nivelRelativo, (int)simb.dir);
-
-			if (simb.type == Symbol.Types.INT || simb.type == Symbol.Types.BOOL)
-				code.addInst(OpCode.RD, 1); 
-			else if (simb.type == Symbol.Types.CHAR)
-				code.addInst(OpCode.RD, 0);
-			else
-				ErrorSemantico.deteccion("En read(), la variable no es de tipo entero, char o bool", null);
-		}
-		catch(SymbolNotFoundException e)
-		{
-			ErrorSemantico.deteccion(e, token);
-		}
+		if (symbolType == Symbol.Types.INT || symbolType == Symbol.Types.BOOL)
+			code.addInst(OpCode.RD, 1); 
+		else if (symbolType == Symbol.Types.CHAR)
+			code.addInst(OpCode.RD, 0);
+		else
+			ErrorSemantico.deteccion("En read(), la variable no es de tipo entero, char o Boolean", null);
 	}
 	( 
-		< tCOMMA > token = < tID > 
+		< tCOMMA > symbolType = expresion(true)
 		{
-			try {
-				simb = tablaSimbolos.getSymbol(token.image);
-
-				int nivelRelativo = tablaSimbolos.level - simb.nivel;
-				code.addInst(OpCode.SRF, nivelRelativo, (int)simb.dir);
-
-				if (simb.type == Symbol.Types.INT || simb.type == Symbol.Types.BOOL)
-					code.addInst(OpCode.RD, 1); 
-				else if (simb.type == Symbol.Types.CHAR)
-					code.addInst(OpCode.RD, 0);
-				else
-					ErrorSemantico.deteccion("En read(), la variable no es de tipo entero, char o bool", null);
-			}
-			catch(SymbolNotFoundException e)
-			{
-				ErrorSemantico.deteccion(e, token);
-			}
+			if (symbolType == Symbol.Types.INT || symbolType == Symbol.Types.BOOL)
+				code.addInst(OpCode.RD, 1); 
+			else if (symbolType == Symbol.Types.CHAR)
+				code.addInst(OpCode.RD, 0);
+			else
+				ErrorSemantico.deteccion("En read(), la variable no es de tipo entero, char o Boolean", null);
 		}
 	)*
 	< tCP >
@@ -635,64 +613,38 @@ void inst_leer_linea() :
 {
 	Token token;
 	Symbol simb = null;
+	Symbol.Types symbolType = null;
 }
 {
 	< tREADLN >
 	< tAP >
 	( 
-	token = < tID >
+	symbolType = expresion(true)
 	{
-		try {
-			simb = tablaSimbolos.getSymbol(token.image);
-
-			if (simb.type != Symbol.Types.INT && simb.type != Symbol.Types.CHAR && simb.type != Symbol.Types.BOOL)
-			ErrorSemantico.deteccion("En readln(), la variable " + token.image + " no es de tipo entero, char, string o bool", token);
-			
-			int nivelRelativo = tablaSimbolos.level - simb.nivel;
-			code.addInst(OpCode.SRF, nivelRelativo, (int)simb.dir);
-			if (simb.type == Symbol.Types.INT || simb.type == Symbol.Types.BOOL)
-				code.addInst(OpCode.RD, 1); 
-			else if (simb.type == Symbol.Types.CHAR)
-				code.addInst(OpCode.RD, 0);
-			else
-				ErrorSemantico.deteccion("En readln(), la variable " + token.image + " no es de tipo entero, char, string o bool", token);
-		}
-		catch(SymbolNotFoundException e)
-		{
-			ErrorSemantico.deteccion(e, token);
-		}
+		if (symbolType == Symbol.Types.INT || symbolType == Symbol.Types.BOOL)
+			code.addInst(OpCode.RD, 1); 
+		else if (symbolType == Symbol.Types.CHAR)
+			code.addInst(OpCode.RD, 0);
+		else
+			ErrorSemantico.deteccion("En read(), la variable no es de tipo entero, char o Boolean", null);
 	}
-
 	)?
-	( < tCOMMA > token = < tID > 
-	{
-		try {
-			simb = tablaSimbolos.getSymbol(token.image);
-
-			if (simb.type != Symbol.Types.INT && simb.type != Symbol.Types.CHAR && simb.type != Symbol.Types.BOOL)
-			ErrorSemantico.deteccion("En readln(), la variable " + token.image + " no es de tipo entero, char, string o bool", token);
-
-
-			int nivelRelativo = tablaSimbolos.level - simb.nivel;
-			code.addInst(OpCode.SRF, nivelRelativo, (int)simb.dir);
-
-			if (simb.type == Symbol.Types.INT || simb.type == Symbol.Types.BOOL)
+	( 
+		< tCOMMA > symbolType = expresion(true)
+		{
+			if (symbolType == Symbol.Types.INT || symbolType == Symbol.Types.BOOL)
 				code.addInst(OpCode.RD, 1); 
-			else if (simb.type == Symbol.Types.CHAR)
+			else if (symbolType == Symbol.Types.CHAR)
 				code.addInst(OpCode.RD, 0);
 			else
-				ErrorSemantico.deteccion("En readln(), la variable " + token.image + " no es de tipo entero, char, string o bool", token);
-		}
-		catch(SymbolNotFoundException e)
-		{
-			ErrorSemantico.deteccion(e, token);
-		}
-	}
+				ErrorSemantico.deteccion("En read(), la variable no es de tipo entero, char o Boolean", null);
+		}	
 	)*
 	< tCP >
 	{
 		Symbol simb_bin = tablaSimbolos.getSymbol("compiler_temporal_int");
-		code.addLabel("READLNLOOP" + simb_bin.dir);
+		String label = CGUtils.newLabel();
+		code.addLabel("READLNLOOP" + label);
 
 		int nivelRelativo = tablaSimbolos.level - simb_bin.nivel;
 		code.addInst(OpCode.SRF, nivelRelativo, (int)simb_bin.dir);
@@ -703,7 +655,7 @@ void inst_leer_linea() :
 
 		code.addInst(OpCode.STC, '\n');
 		code.addInst(OpCode.NEQ);
-		code.addInst(OpCode.JMT, "READLNLOOP" + simb_bin.dir);
+		code.addInst(OpCode.JMT, "READLNLOOP" + label);
 		// Añadimos bucle hasta detectar salto de línea
 
 	}
@@ -741,18 +693,42 @@ void argumentos_escribir() :
 	Symbol.Types type;
 }
 {
-	type = expresion() { print_argument(type); } (< tCOMMA > type = expresion() { print_argument(type);})*
+	type = expresion(false) { print_argument(type); } (< tCOMMA > type = expresion(false) { print_argument(type);})*
 	{}
 }
 
-ArrayList<Symbol.Types> argumentos() :
+ArrayList<Symbol.Types> argumentos(ArrayList<Symbol> arguments, String name, Integer line) :
 {
 	Symbol.Types type;
 	ArrayList<Symbol.Types> types = new ArrayList<Symbol.Types>();
+	ArrayList<Symbol> arguments_internal = new ArrayList<Symbol>(arguments);
 }
 {
-	type = expresion() { types.add(type); } (< tCOMMA > type = expresion() { types.add(type); })*
+	type = expresion(arguments_internal.get(0).parClass == Symbol.ParameterClass.REF) 
+	{ 
+		types.add(type); 
+
+		if (arguments_internal.size() > 0)
+			arguments_internal.remove(0);
+		else
+			ErrorSemantico.deteccion("Hay más argumentos de la cuenta en la llamada a función "+name+", linea: "+line);
+	} 
+	(
+		< tCOMMA > type = expresion(arguments_internal.get(0).parClass == Symbol.ParameterClass.REF) 
+		{ 
+			types.add(type); 
+			
+			if (arguments_internal.size() > 0)
+				arguments_internal.remove(0);
+			else
+				ErrorSemantico.deteccion("Hay más argumentos de la cuenta en la llamada a función "+name+", linea: "+line);
+		}
+	)*
 	{
+		if (arguments_internal.size() > 0)
+		{
+			ErrorSemantico.deteccion("Hay menos argumentos de la cuenta en la llamada a función "+name+", linea: "+line);
+		}
 		return types;
 	}
 }
@@ -764,7 +740,7 @@ void inst_asignacion() :
 {
 	symbolAss = asignable()
 	< tASSIGN >
-	symbolExp = expresion()
+	symbolExp = expresion(false)
 	{
 		if (symbolAss != symbolExp)
 		{
@@ -781,14 +757,28 @@ Symbol.Types asignable() :
 	Token token;
 }
 {
-	token = < tID > ( < tACOR > index = expresion() < tCCOR > )?
+	token = < tID > ( < tACOR > index = expresion(false) < tCCOR > )?
 	{
 		if (index == null)
 		{
-			Symbol simbolo = tablaSimbolos.getSymbol(token.image);
-			int nivelRelativo =  tablaSimbolos.level - simbolo.nivel;
-			code.addInst(OpCode.SRF, nivelRelativo, (int)simbolo.dir);	// Dirección de la variable
-			return simbolo.type;
+			try {
+				Symbol simbolo = tablaSimbolos.getSymbol(token.image);
+
+				int nivelRelativo =  tablaSimbolos.level - simbolo.nivel;
+				code.addInst(OpCode.SRF, nivelRelativo, (int)simbolo.dir);	// Dirección de la variable
+
+				if (simbolo.parClass == Symbol.ParameterClass.REF)
+					code.addInst(OpCode.DRF);
+				
+				return simbolo.type;
+			}
+
+			catch(SymbolNotFoundException e)
+			{
+				ErrorSemantico.deteccion("El símbolo " + token.image + " no existe, línea " + token.beginLine);
+			}
+
+			return null;
 		}
 		else // Nuestro simbolo forma parte de un vector
 		{
@@ -803,6 +793,10 @@ Symbol.Types asignable() :
 
 			int nivelRelativo = tablaSimbolos.level - array.nivel;
 			code.addInst(OpCode.SRF, nivelRelativo, (int)array.dir);
+			
+			if (array.parClass == Symbol.ParameterClass.REF)
+				code.addInst(OpCode.DRF);
+
 			code.addInst(OpCode.PLUS);
 
 			return array.baseType;
@@ -816,7 +810,7 @@ void inst_seleccion() :
 	String labelEnd = "ENDCONDITIONAL" + CGUtils.newLabel();
 }
 {
-	< tIF > < tAP > expresion() < tCP >
+	< tIF > < tAP > expresion(false) < tCP >
 	{
 		label = "ENDIF" + CGUtils.newLabel();
 		code.addInst(OpCode.JMF, label);
@@ -847,7 +841,7 @@ void bloque_else_ifs(String labelEnd):
 	String label;
 }
 {
-	< tELSE > < tIF > < tAP > expresion() < tCP > 
+	< tELSE > < tIF > < tAP > expresion(false) < tCP > 
 	{
 		label = "ENDELSEIF" + CGUtils.newLabel();
 		code.addInst(OpCode.JMF, label);
@@ -874,9 +868,21 @@ void bloque_else_ifs(String labelEnd):
 }
 
 void inst_iteracion() :
-{}
 {
-	< tWHILE > < tAP > expresion() < tCP > bloque_codigo()
+	String labelInit = "INITWHILE"+CGUtils.newLabel();
+	String labelEnd = "ENDWHILE" + CGUtils.newLabel();
+	code.addLabel(labelInit);
+}
+{
+	< tWHILE > < tAP > expresion(false) 
+	{
+		code.addInst(OpCode.JMT, labelEnd);
+	} 
+	< tCP > bloque_codigo()
+	{
+		code.addInst(OpCode.JMP, labelInit);
+		code.addLabel(labelEnd);
+	}
 }
 
 void bloque_codigo() :
@@ -902,7 +908,7 @@ Symbol.Types inst_return() :
 	Symbol.Types type;
 }
 {
-	< tRETURN > type = expresion() 
+	< tRETURN > type = expresion(false) 
 	{
 		String funcName = tablaSimbolos.getBlockName();
 		Symbol symb = tablaSimbolos.getSymbol(funcName);
@@ -933,36 +939,50 @@ Symbol.Types inst_invoc_proc() :
 {
 	Token token;
 	Symbol.Types tipo = null;
+	Boolean error = false; 
+	ArrayList<Symbol> parameters = new ArrayList();
+	String name = "";
 }
 {
 	token = < tID >
-	< tAP >
-	(argumentos())?
-	< tCP >
 	{
 		try{
 			Symbol SimboloDeFuncion = tablaSimbolos.getSymbol(token.image);
+	
 			if (SimboloDeFuncion.type == Symbol.Types.PROCEDURE)
 			{
+				SymbolProcedure procedimiento = (SymbolProcedure) SimboloDeFuncion;
 				tipo = Symbol.Types.VOID;
+
+				parameters = procedimiento.parList;
+				name = procedimiento.name;
 			}
 			else if (SimboloDeFuncion.type == Symbol.Types.FUNCTION)
 			{
 				SymbolFunction funcion = (SymbolFunction) SimboloDeFuncion;
 				tipo = funcion.returnType;
+
+				parameters = funcion.parList;
+				name = funcion.name;				
 			}
 			else
 			{
 				ErrorSemantico.deteccion("El identificador " + token.image + " no es una función ni un procedimiento", token);
 			}
-			
-			code.addOSFInst(tablaSimbolos.getTopDir(), tablaSimbolos.level, SimboloDeFuncion.name.toUpperCase());
-		}	
+		}
 		catch (SymbolNotFoundException e) {
+			error = true;
 			System.out.println(e+", linea "+token.beginLine+", columna "+token.beginColumn);
 		}
-
-		return tipo;
+	}
+	< tAP >
+	(argumentos(parameters, name, token.beginLine))?
+	< tCP >
+	{	
+		if (!error){
+			code.addOSFInst(tablaSimbolos.getTopDir(), tablaSimbolos.level, name.toUpperCase());
+			return tipo;
+		}
 	}
 }
 
@@ -974,18 +994,18 @@ String operador_not() :
 	(token = < tNOT > {return "!";} | token = < tMENOS > { return "-";})
 }
 
-Symbol.Types expresion() :
+Symbol.Types expresion(Boolean sendRef) :
 {
 	Symbol.Types factor1Type, factor2Type = null;
 	String token = null;
 }
 {
-	factor1Type = relacion()
- 	(token = and_or() factor2Type = relacion()
+	factor1Type = relacion(sendRef)
+ 	(token = and_or() factor2Type = relacion(sendRef)
 	{
 		if (factor1Type != Symbol.Types.BOOL || factor2Type!= Symbol.Types.BOOL)
 		{
-			ErrorSemantico.deteccion("En operación lógica, los operandos deben ser de tipo bool ("+
+			ErrorSemantico.deteccion("En operación lógica, los operandos deben ser de tipo Boolean ("+
 									factor1Type+", "+factor2Type+")");
 		}
 		
@@ -1018,16 +1038,16 @@ String and_or() :
 	)
 }
 
-Symbol.Types relacion() :
+Symbol.Types relacion(Boolean sendRef) :
 {
 	Symbol.Types factor1Type, factor2Type = null;
 	String token = null;
 }
 {
-	factor1Type = expresion_simple()
+	factor1Type = expresion_simple(sendRef)
 	( 
 		token = operador_relacional()
-		factor2Type = expresion_simple()
+		factor2Type = expresion_simple(sendRef)
 		{
 			if (factor1Type != factor2Type)
 			{
@@ -1076,16 +1096,16 @@ String operador_relacional() :
 )
 }
 
-Symbol.Types expresion_simple() :
+Symbol.Types expresion_simple(Boolean sendRef) :
 {
 	Symbol.Types factor1Type, factor2Type = null;
 	String token = null;
 }
 {
-	factor1Type = termino()
+	factor1Type = termino(sendRef)
 	( 
 		token = op_MAS_MENOS() 
-		factor2Type = termino()
+		factor2Type = termino(sendRef)
 		{
 			if (factor1Type != factor2Type)
 			{
@@ -1142,16 +1162,16 @@ Symbol.Types tipo() :
 	}
 }
 
-Symbol.Types termino() :
+Symbol.Types termino(Boolean sendRef) :
 {
 	Symbol.Types factor1Type, factor2Type = null;
 	String token = null;
 }
 {
-	factor1Type = factor()
+	factor1Type = factor(sendRef)
 	( 
 		token = op_MULT()
-		factor2Type = factor()
+		factor2Type = factor(sendRef)
 		{
 			if (factor1Type != factor2Type)
 			{
@@ -1191,16 +1211,16 @@ String op_MULT() :
 }
 
 
-Symbol.Types factor() :
+Symbol.Types factor(Boolean sendRef) :
 {
 	Symbol.Types factorType;
 	String token = null;
 }
 {
 	(
-		factorType = primario()
+		factorType = primario(sendRef)
 		|	token = operador_not()
-		factorType = primario()
+		factorType = primario(sendRef)
 		{
 			if (token == "!")
 				code.addInst(OpCode.NGB);
@@ -1214,30 +1234,36 @@ Symbol.Types factor() :
 }
 
 
-Symbol.Types primario() :
+Symbol.Types primario(Boolean sendRef) :
 {
 	Token token = null, tokenConst = null;
 	Symbol.Types symbolType = null, symbolCastToChar = null, symbolCastToInt = null;
 }
 {
 	(	
-			< tAP > symbolType = expresion() < tCP >
-		|	< tINT2CHAR > < tAP > symbolType = expresion() < tCP >
+			< tAP > symbolType = expresion(false) < tCP >
+		|	< tINT2CHAR > < tAP > symbolType = expresion(false) < tCP >
 		{
+			if (sendRef)
+				ErrorSemantico.deteccion("No puede pasarse un valor calculado como referencia");
+			
 			if (symbolType == Symbol.Types.INT)
 				symbolType = Symbol.Types.CHAR;
 			else
 				ErrorSemantico.deteccion("El tipo de la expresión al hacer cast to char debe ser int");
 		}
-		|	< tCHAR2INT > < tAP > symbolType = expresion() < tCP >
+		|	< tCHAR2INT > < tAP > symbolType = expresion(false) < tCP >
 		{
+			if (sendRef)
+				ErrorSemantico.deteccion("No puede pasarse un valor calculado como referencia");
+				
 			if (symbolType == Symbol.Types.CHAR)
 				symbolType = Symbol.Types.INT;
 			else
 				ErrorSemantico.deteccion("El tipo de la expresión al hacer cast to int debe ser char");
 		}
 		|	LOOKAHEAD(2) symbolType = inst_invoc_proc()
-		|	LOOKAHEAD(2) token = < tID > < tACOR > symbolType = expresion() < tCCOR >
+		|	LOOKAHEAD(2) token = < tID > < tACOR > symbolType = expresion(sendRef) < tCCOR >
 		{
 			if (symbolType != Symbol.Types.INT)
 			{
@@ -1249,18 +1275,24 @@ Symbol.Types primario() :
 
 				if (arr.type != Symbol.Types.ARRAY)
 				{
-					ErrorSemantico.deteccion("El identificador no es un array");
+					ErrorSemantico.deteccion("El identificador " + arr.name + " no es un array, es de tipo " + arr.type);
 				}
 				else
-				{
+				{					
 					SymbolArray array = (SymbolArray)arr;
 					symbolType = array.baseType;
 
 					// Cálculo de dirección del indexado, base+index
 					int nivelRelativo = tablaSimbolos.level - array.nivel;
 					code.addInst(OpCode.SRF, nivelRelativo, (int)array.dir);
+
+					if (arr.parClass == Symbol.ParameterClass.REF)
+						code.addInst(OpCode.DRF);
+
 					code.addInst(OpCode.PLUS);
-					code.addInst(OpCode.DRF);	// Carga el valor del elemento en la pila
+					
+					if (!sendRef)
+						code.addInst(OpCode.DRF);	// Carga el valor del elemento en la pila
 				}
 			}
 		}
@@ -1270,22 +1302,64 @@ Symbol.Types primario() :
 			symbolType = simbolo.type;
 			
 			int nivelRelativo =  tablaSimbolos.level - simbolo.nivel;
-			
-			if (symbolType == Symbol.Types.ARRAY)
+			if (simbolo.parClass == Symbol.ParameterClass.REF)
 			{
-				SymbolArray array = (SymbolArray)simbolo;
-				int arrLen = array.maxInd - array.minInd + 1;
-
-				for (int i = 0; i < arrLen; i++)
+				if (symbolType == Symbol.Types.ARRAY)
 				{
-					code.addInst(OpCode.SRF, nivelRelativo, (int)simbolo.dir + i);
-					code.addInst(OpCode.DRF);	// Carga el valor de la variable en la pila
+					SymbolArray array = (SymbolArray)simbolo;
+					int arrLen = array.maxInd - array.minInd + 1;
+					
+					if (!sendRef) // Se debe pasar el vector por valor
+					{
+						for (int i = 0; i < arrLen; i++)
+						{
+							code.addInst(OpCode.SRF, nivelRelativo, (int)simbolo.dir);
+							code.addInst(OpCode.DRF);	// Carga la direccion de la variable
+							code.addInst(OpCode.STC, i);	// Desplazamiento en el array
+							code.addInst(OpCode.PLUS);	
+							code.addInst(OpCode.DRF); // Cargar el valor de la direccion anteriormente cargada
+						}
+					}
+					else
+					{
+						code.addInst(OpCode.SRF, nivelRelativo, (int)simbolo.dir);
+						code.addInst(OpCode.DRF);	// Carga la direccion de la variable
+					}
+				}
+				else
+				{
+					code.addInst(OpCode.SRF, nivelRelativo, (int)simbolo.dir);
+					code.addInst(OpCode.DRF);	// Carga el valor del puntero
+					if (!sendRef) 
+						code.addInst(OpCode.DRF);	// Carga el valor de la variable en la pila
 				}
 			}
-			else
+			else 
 			{
-				code.addInst(OpCode.SRF, nivelRelativo, (int)simbolo.dir);
-				code.addInst(OpCode.DRF);	// Carga el valor de la variable en la pila
+				if (symbolType == Symbol.Types.ARRAY)
+				{
+					SymbolArray array = (SymbolArray)simbolo;
+					int arrLen = array.maxInd - array.minInd + 1;
+					
+					if (!sendRef)
+					{
+						for (int i = 0; i < arrLen; i++)
+						{
+							code.addInst(OpCode.SRF, nivelRelativo, (int)simbolo.dir + i);
+							code.addInst(OpCode.DRF);	// Carga el valor de la variable en la pila
+						}
+					}
+					else 
+					{
+						code.addInst(OpCode.SRF, nivelRelativo, (int)simbolo.dir);
+					}
+				}
+				else
+				{
+					code.addInst(OpCode.SRF, nivelRelativo, (int)simbolo.dir);
+					if (!sendRef)
+						code.addInst(OpCode.DRF);	// Carga el valor de la variable en la pila
+				}
 			}
 		}
 		|	tokenConst = < tCONST_INT > 

@@ -764,7 +764,7 @@ public class clike implements clikeConstants {
     jj_consume_token(tWHILE);
     jj_consume_token(tAP);
     expresion(false);
-                code.addInst(OpCode.JMT, labelEnd);
+                code.addInst(OpCode.JMF, labelEnd);
     jj_consume_token(tCP);
     bloque_codigo();
                 code.addInst(OpCode.JMP, labelInit);
@@ -948,6 +948,7 @@ public class clike implements clikeConstants {
   static final public Symbol.Types expresion(Boolean sendRef) throws ParseException {
         Symbol.Types factor1Type, factor2Type = null;
         String token = null;
+        String label = "ENDANDOR" + CGUtils.newLabel();
     factor1Type = relacion(sendRef);
     label_9:
     while (true) {
@@ -961,20 +962,26 @@ public class clike implements clikeConstants {
         break label_9;
       }
       token = and_or();
+                        if (token == "||")
+                        {
+                                code.addInst(OpCode.DUP);
+                                code.addInst(OpCode.JMT, label);
+                        }
+                        else
+                        {
+                                code.addInst(OpCode.DUP);
+                                code.addInst(OpCode.JMF, label);
+                        }
       factor2Type = relacion(sendRef);
-                if (factor1Type != Symbol.Types.BOOL || factor2Type!= Symbol.Types.BOOL)
-                {
-                        ErrorSemantico.deteccion("En operaci\u00f3n l\u00f3gica, los operandos deben ser de tipo Boolean ("+
-                                                                        factor1Type+", "+factor2Type+")");
-                }
-
-                if (token == "&&")
-                        code.addInst(OpCode.AND);
-                else
-                        code.addInst(OpCode.OR);
+                        if (factor1Type != Symbol.Types.BOOL || factor2Type!= Symbol.Types.BOOL)
+                        {
+                                ErrorSemantico.deteccion("En operaci\u00f3n l\u00f3gica, los operandos deben ser de tipo Boolean ("+
+                                                                                factor1Type+", "+factor2Type+")");
+                        }
     }
                 if (factor2Type != null)
                 {
+                        code.addLabel(label);
                         {if (true) return Symbol.Types.BOOL;}
                 }
                 else
@@ -1503,26 +1510,13 @@ public class clike implements clikeConstants {
     finally { jj_save(6, xla); }
   }
 
-  static private boolean jj_3_4() {
-    if (jj_3R_15()) return true;
-    return false;
-  }
-
-  static private boolean jj_3R_21() {
-    if (jj_scan_token(tVOID)) return true;
-    return false;
-  }
-
-  static private boolean jj_3R_17() {
-    if (jj_3R_22()) return true;
-    Token xsp;
-    xsp = jj_scanpos;
-    if (jj_3R_23()) jj_scanpos = xsp;
-    return false;
-  }
-
   static private boolean jj_3R_20() {
     if (jj_scan_token(tBOOL)) return true;
+    return false;
+  }
+
+  static private boolean jj_3_4() {
+    if (jj_3R_15()) return true;
     return false;
   }
 
@@ -1552,6 +1546,25 @@ public class clike implements clikeConstants {
     return false;
   }
 
+  static private boolean jj_3R_17() {
+    if (jj_3R_22()) return true;
+    Token xsp;
+    xsp = jj_scanpos;
+    if (jj_3R_23()) jj_scanpos = xsp;
+    return false;
+  }
+
+  static private boolean jj_3_7() {
+    if (jj_scan_token(tID)) return true;
+    if (jj_scan_token(tACOR)) return true;
+    return false;
+  }
+
+  static private boolean jj_3_6() {
+    if (jj_3R_14()) return true;
+    return false;
+  }
+
   static private boolean jj_3_5() {
     if (jj_3R_15()) return true;
     return false;
@@ -1565,17 +1578,6 @@ public class clike implements clikeConstants {
 
   static private boolean jj_3R_23() {
     if (jj_scan_token(tCOMMA)) return true;
-    return false;
-  }
-
-  static private boolean jj_3_7() {
-    if (jj_scan_token(tID)) return true;
-    if (jj_scan_token(tACOR)) return true;
-    return false;
-  }
-
-  static private boolean jj_3_6() {
-    if (jj_3R_14()) return true;
     return false;
   }
 
@@ -1623,6 +1625,11 @@ public class clike implements clikeConstants {
   static private boolean jj_3_1() {
     if (jj_3R_12()) return true;
     if (jj_scan_token(tPC)) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_21() {
+    if (jj_scan_token(tVOID)) return true;
     return false;
   }
 

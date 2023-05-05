@@ -159,7 +159,7 @@ public interface clikeConstants {
     "\"while\"",
     "\"if\"",
     "\"else\"",
-    "\"Boolean\"",
+    "\"bool\"",
     "\"char\"",
     "\"int\"",
     "\"false\"",

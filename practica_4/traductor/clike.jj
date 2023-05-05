@@ -207,7 +207,7 @@ TOKEN : {
 }
 
 TOKEN : {
-	< tBOOL: 	"Boolean" > {
+	< tBOOL: 	"bool" > {
 							//System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
 							//System.out.println("token " + "\"" + matchedToken + "\"");
 						}
@@ -864,7 +864,6 @@ void bloque_else_ifs(String labelEnd):
 			code.addLabel(labelEnd);
 		}
 	)?
-
 }
 
 void inst_iteracion() :
@@ -876,7 +875,7 @@ void inst_iteracion() :
 {
 	< tWHILE > < tAP > expresion(false) 
 	{
-		code.addInst(OpCode.JMT, labelEnd);
+		code.addInst(OpCode.JMF, labelEnd);
 	} 
 	< tCP > bloque_codigo()
 	{
@@ -998,26 +997,37 @@ Symbol.Types expresion(Boolean sendRef) :
 {
 	Symbol.Types factor1Type, factor2Type = null;
 	String token = null;
+	String label = "ENDANDOR" + CGUtils.newLabel();
 }
 {
 	factor1Type = relacion(sendRef)
- 	(token = and_or() factor2Type = relacion(sendRef)
-	{
-		if (factor1Type != Symbol.Types.BOOL || factor2Type!= Symbol.Types.BOOL)
+ 	(	
+		token = and_or()
 		{
-			ErrorSemantico.deteccion("En operación lógica, los operandos deben ser de tipo Boolean ("+
-									factor1Type+", "+factor2Type+")");
+			if (token == "||")
+			{
+				code.addInst(OpCode.DUP);
+				code.addInst(OpCode.JMT, label);
+			}
+			else
+			{
+				code.addInst(OpCode.DUP);
+				code.addInst(OpCode.JMF, label);
+			}
+		} 
+		factor2Type = relacion(sendRef)
+		{
+			if (factor1Type != Symbol.Types.BOOL || factor2Type!= Symbol.Types.BOOL)
+			{
+				ErrorSemantico.deteccion("En operación lógica, los operandos deben ser de tipo Boolean ("+
+										factor1Type+", "+factor2Type+")");
+			}
 		}
-		
-		if (token == "&&")
-			code.addInst(OpCode.AND);
-		else
-			code.addInst(OpCode.OR);
-	}
 	)*
 	{
 		if (factor2Type != null)
 		{
+			code.addLabel(label);
 			return Symbol.Types.BOOL;			
 		}
 		else

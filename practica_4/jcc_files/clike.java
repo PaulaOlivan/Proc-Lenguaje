@@ -300,6 +300,8 @@ public class clike implements clikeConstants {
                 }
 
                 Symbol funcSimb = tablaSimbolos.getSymbol(token.image);
+                System.out.println(funcSimb);
+
                 if (funcSimb instanceof SymbolFunction)
                 {
                         SymbolFunction func = (SymbolFunction) funcSimb;
@@ -1659,11 +1661,6 @@ public class clike implements clikeConstants {
     finally { jj_save(6, xla); }
   }
 
-  static private boolean jj_3R_21() {
-    if (jj_scan_token(tVOID)) return true;
-    return false;
-  }
-
   static private boolean jj_3R_24() {
     if (jj_scan_token(tACOR)) return true;
     return false;
@@ -1779,6 +1776,11 @@ public class clike implements clikeConstants {
 
   static private boolean jj_3R_23() {
     if (jj_scan_token(tCOMMA)) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_21() {
+    if (jj_scan_token(tVOID)) return true;
     return false;
   }
 

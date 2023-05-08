@@ -1,0 +1,88 @@
+  ENP MAIN
+SUM:
+  SRF  0  3
+  ASGI
+  STC  1
+  SRF  0  3
+  DRF
+  PLUS
+  STC  0
+  SRF  0  3
+  DRF
+  PLUS
+  DRF
+  STC  1
+  SRF  0  3
+  DRF
+  PLUS
+  DRF
+  PLUS
+  ASG
+  CSF
+IMPRIMIR:
+  SRF  0  3
+  ASGI
+  SRF  0  3
+  DRF
+  WRT  1
+  STC 10
+  WRT  0
+  STC  1
+  CSF
+PANTALLA:
+  STC 70
+  WRT  0
+  STC 117
+  WRT  0
+  STC 110
+  WRT  0
+  STC 99
+  WRT  0
+  STC 105
+  WRT  0
+  STC 111
+  WRT  0
+  STC 110
+  WRT  0
+  STC 111
+  WRT  0
+  STC 10
+  WRT  0
+  CSF
+MAIN:
+  SRF  0  5
+  RD  1
+  OSF  5  0 PANTALLA
+INITWHILEL8:
+  SRF  0  5
+  DRF
+  STC 10
+  LT
+  JMF ENDWHILEL9
+  SRF  0  5
+  SRF  0  5
+  DRF
+  STC  1
+  PLUS
+  ASG
+  SRF  0  5
+  DRF
+  WRT  1
+  JMP INITWHILEL8
+ENDWHILEL9:
+  STC 83
+  WRT  0
+  STC 117
+  WRT  0
+  STC 109
+  WRT  0
+  STC 58
+  WRT  0
+  STC 32
+  WRT  0
+  SRF  0  5
+  DRF
+  WRT  1
+  STC 10
+  WRT  0
+  LVP

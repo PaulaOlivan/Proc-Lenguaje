@@ -9,7 +9,7 @@ listaFicheros = os.listdir(testRoute)
 #print(listaFicheros)
 for fichero in listaFicheros:
 
-    cmd = "java -jar ./dist/clike.jar "+ testRoute+ "/"+ fichero
+    cmd = "java -jar ./dist/clike.jar "+ testRoute+ "/"+ fichero+" "+fichero 
     output = subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT)
     
     error = False

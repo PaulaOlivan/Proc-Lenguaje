@@ -12,6 +12,10 @@ public class clike implements clikeConstants {
 
         protected static SymbolTable tablaSimbolos = new SymbolTable();
         protected static CodeBlock code = new CodeBlock();
+        protected static boolean encontradoReturn = false;
+        protected static boolean returnEnWhile = false;
+        protected static boolean haHabidoError = false;
+        protected static String outputName;
 
         public static void main(String[] args) {
                 clike parser = null;
@@ -21,8 +25,16 @@ public class clike implements clikeConstants {
                                 parser = new clike(System.in);
                         }
                         else {
-                                parser = new clike(new java.io.FileInputStream(args[0]));                       // 0 puede que sea el nombre del propio ejecutable, cuidado
+                                parser = new clike(new java.io.FileInputStream(args[0]));
                         }
+
+                        if (args.length < 2) {
+                                System.err.println("Error: Debe indicar el nombre del fichero de salida");
+                                System.exit(1);
+                        }
+
+                        outputName = args[1];   // Nombre del fichero de salida
+
                         //Programa es el símbolo inicial de la gramática
                         parser.Programa();
                         //...
@@ -32,13 +44,17 @@ public class clike implements clikeConstants {
                         System.err.println ("Fichero " + args[0] + " no encontrado.");
                 }
                 catch (TokenMgrError e) {
-                        System.err.println("LEX_ERROR: " + e.getMessage());
+                        System.err.println("LEX_ERROR: " + e);
+                        haHabidoError = true;
                 }
                 catch (ParseException e) {
-                        System.err.println("PARSE_ERROR: " + e.getMessage());
+                        System.err.println("PARSE_ERROR: " + e);
+                        haHabidoError = true;
                 }
                 catch (Exception e) {
-                        System.err.println("ERROR: " + e.getMessage());
+                        System.err.println("ERROR: " + e);
+                        haHabidoError = true;
+
                 }
         }
 
@@ -72,6 +88,7 @@ public class clike implements clikeConstants {
         }
         catch (AlreadyDefinedSymbolException e) {
                 System.err.println("ERROR INTERNO, el identificador compiler_temporal_int ya est\u00e1 declarado");
+                haHabidoError = true;
         }
     label_1:
     while (true) {
@@ -90,7 +107,15 @@ public class clike implements clikeConstants {
     }
     jj_consume_token(0);
                 code.addInst(OpCode.LVP);
-                System.out.println(code);
+
+                // Escribimos el código en un fichero
+                if (!haHabidoError)
+                {
+                        System.out.println("Compilaci\u00f3n finalizada. Se ha generado el fichero " + outputName + ".pcode");
+                        code.writeCodeToFile(outputName+".pcode");
+                }
+                else
+                        System.err.println("No se ha generado el c\u00f3digo por haber errores en el programa");
   }
 
   static final public void declaracion() throws ParseException {
@@ -244,6 +269,7 @@ public class clike implements clikeConstants {
                 else
                 {
                         simbolo = new SymbolFunction(token.image, tipo);
+                        encontradoReturn = false;
                 }
 
                 try{
@@ -274,7 +300,6 @@ public class clike implements clikeConstants {
                 }
 
                 Symbol funcSimb = tablaSimbolos.getSymbol(token.image);
-
                 if (funcSimb instanceof SymbolFunction)
                 {
                         SymbolFunction func = (SymbolFunction) funcSimb;
@@ -282,11 +307,26 @@ public class clike implements clikeConstants {
                 }
                 else if (funcSimb instanceof SymbolProcedure)
                 {
+                        System.out.println("Procedimiento "+funcSimb.name+", par\u00e1metros: "+parametros);
                         SymbolProcedure func = (SymbolProcedure) funcSimb;
                         func.setParameters(parametros);
                 }
     bloque_codigo_con_variables();
                 tablaSimbolos.removeBlock();
+
+                if (tipo != Symbol.Types.VOID && !encontradoReturn)
+                {
+                        if (returnEnWhile)
+                        {
+                                ErrorSemantico.deteccion("Error, los returns en un while no garantizan que la funci\u00f3n " + simbolo.name + " termine con return");
+                                haHabidoError = true;
+                        }
+                        else
+                        {
+                                ErrorSemantico.deteccion("Error, la funci\u00f3n " + simbolo.name + " puede no terminar con return");
+                                haHabidoError = true;
+                        }
+                }
 
                 if (tipo == Symbol.Types.VOID)
                 {
@@ -425,7 +465,10 @@ public class clike implements clikeConstants {
                 else if (symbolType == Symbol.Types.CHAR)
                         code.addInst(OpCode.RD, 0);
                 else
+                {
                         ErrorSemantico.deteccion("En read(), la variable no es de tipo entero, char o Boolean", null);
+                        haHabidoError = true;
+                }
     label_2:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -443,7 +486,10 @@ public class clike implements clikeConstants {
                         else if (symbolType == Symbol.Types.CHAR)
                                 code.addInst(OpCode.RD, 0);
                         else
+                        {
                                 ErrorSemantico.deteccion("En read(), la variable no es de tipo entero, char o Boolean", null);
+                                haHabidoError = true;
+                        }
     }
     jj_consume_token(tCP);
   }
@@ -472,7 +518,10 @@ public class clike implements clikeConstants {
                 else if (symbolType == Symbol.Types.CHAR)
                         code.addInst(OpCode.RD, 0);
                 else
+                {
                         ErrorSemantico.deteccion("En read(), la variable no es de tipo entero, char o Boolean", null);
+                        haHabidoError = true;
+                }
       break;
     default:
       jj_la1[11] = jj_gen;
@@ -495,7 +544,10 @@ public class clike implements clikeConstants {
                         else if (symbolType == Symbol.Types.CHAR)
                                 code.addInst(OpCode.RD, 0);
                         else
+                        {
                                 ErrorSemantico.deteccion("En read(), la variable no es de tipo entero, char o Boolean", null);
+                                haHabidoError = true;
+                        }
     }
     jj_consume_token(tCP);
                 Symbol simb_bin = tablaSimbolos.getSymbol("compiler_temporal_int");
@@ -581,7 +633,10 @@ public class clike implements clikeConstants {
                 if (arguments_internal.size() > 0)
                         arguments_internal.remove(0);
                 else
+                {
                         ErrorSemantico.deteccion("Hay m\u00e1s argumentos de la cuenta en la llamada a funci\u00f3n "+name+", linea: "+line);
+                        haHabidoError = true;
+                }
     label_5:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -599,11 +654,15 @@ public class clike implements clikeConstants {
                         if (arguments_internal.size() > 0)
                                 arguments_internal.remove(0);
                         else
+                        {
                                 ErrorSemantico.deteccion("Hay m\u00e1s argumentos de la cuenta en la llamada a funci\u00f3n "+name+", linea: "+line);
+                                haHabidoError = true;
+                        }
     }
                 if (arguments_internal.size() > 0)
                 {
                         ErrorSemantico.deteccion("Hay menos argumentos de la cuenta en la llamada a funci\u00f3n "+name+", linea: "+line);
+                        haHabidoError = true;
                 }
                 {if (true) return types;}
     throw new Error("Missing return statement in function");
@@ -617,6 +676,7 @@ public class clike implements clikeConstants {
                 if (symbolAss != symbolExp)
                 {
                         ErrorSemantico.deteccion("En asignaci\u00f3n, la expresi\u00f3n de tipo " + symbolExp + " no coincide con el tipo de la variable: "+symbolAss, token);
+                        haHabidoError = true;
                 }
 
                 code.addInst(OpCode.ASG);
@@ -653,6 +713,7 @@ public class clike implements clikeConstants {
                         catch(SymbolNotFoundException e)
                         {
                                 ErrorSemantico.deteccion("El s\u00edmbolo " + token.image + " no existe, l\u00ednea " + token.beginLine);
+                                haHabidoError = true;
                         }
 
                         {if (true) return null;}
@@ -662,6 +723,7 @@ public class clike implements clikeConstants {
                         if (index != Symbol.Types.INT)
                         {
                                 ErrorSemantico.deteccion("En asignaci\u00f3n, el \u00edndice del vector " + token.image + " no es de tipo entero", token);
+                                haHabidoError = true;
                         }
 
                         SymbolArray array = (SymbolArray) tablaSimbolos.getSymbol(token.image);
@@ -684,6 +746,11 @@ public class clike implements clikeConstants {
   static final public void inst_seleccion() throws ParseException {
         String label;
         String labelEnd = "ENDCONDITIONAL" + CGUtils.newLabel();
+        Boolean oldReturn = encontradoReturn;   // Para controlar si hay un return dentro del if
+        Boolean buscarReturn = !encontradoReturn;
+        Boolean encontradoReturn_en_if = false;
+        Boolean encontradoReturn_en_if_else = false;
+        Boolean encontradoReturn_en_else = false;
     jj_consume_token(tIF);
     jj_consume_token(tAP);
     expresion(false);
@@ -693,10 +760,20 @@ public class clike implements clikeConstants {
     bloque_codigo();
                 code.addInst(OpCode.JMP, labelEnd);
                 code.addLabel(label);
+
+                if (buscarReturn && encontradoReturn) // Si ha aparecido un return
+                {
+                        encontradoReturn_en_if = true;
+                        encontradoReturn = false;
+                }
+                else            // Si no se ha encontrado un return 
+                {
+                        encontradoReturn_en_if = false;
+                }
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case tELSE:
       if (jj_2_4(2)) {
-        bloque_else_ifs(labelEnd);
+        encontradoReturn_en_if_else = bloque_else_ifs(labelEnd, buscarReturn, true);
       } else {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case tELSE:
@@ -705,6 +782,16 @@ public class clike implements clikeConstants {
           bloque_codigo();
                         code.addLabel(label);
                         code.addLabel(labelEnd);
+
+                        if (buscarReturn && encontradoReturn) // Si ha aparecido un return
+                        {
+                                encontradoReturn_en_else = true;
+                                encontradoReturn = false;
+                        }
+                        else            // Si no se ha encontrado un return 
+                        {
+                                encontradoReturn_en_else = false;
+                        }
           break;
         default:
           jj_la1[17] = jj_gen;
@@ -717,10 +804,15 @@ public class clike implements clikeConstants {
       jj_la1[18] = jj_gen;
       ;
     }
+                encontradoReturn = !buscarReturn || (encontradoReturn_en_if && (encontradoReturn_en_else || encontradoReturn_en_if_else));
   }
 
-  static final public void bloque_else_ifs(String labelEnd) throws ParseException {
+  static final public Boolean bloque_else_ifs(String labelEnd, Boolean buscarReturn, Boolean buscarElse) throws ParseException {
         String label;
+
+        Boolean oldReturn = encontradoReturn;   // Para controlar si hay un return dentro del if
+        Boolean encontradoReturn_en_if = false;
+        Boolean encontradoReturn_en_else = false;
     jj_consume_token(tELSE);
     jj_consume_token(tIF);
     jj_consume_token(tAP);
@@ -731,16 +823,36 @@ public class clike implements clikeConstants {
     bloque_codigo();
                 code.addInst(OpCode.JMP, labelEnd);
                 code.addLabel(label);
+
+                if (buscarReturn && encontradoReturn) // Si ha aparecido un return
+                {
+                        encontradoReturn_en_if = true;
+                        encontradoReturn = false;
+                }
+                else            // Si no se ha encontrado un return 
+                {
+                        encontradoReturn_en_if = false;
+                }
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case tELSE:
       if (jj_2_5(2)) {
-        bloque_else_ifs(labelEnd);
+        bloque_else_ifs(labelEnd, buscarReturn, false);
       } else {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case tELSE:
           jj_consume_token(tELSE);
                         label = "ENDELSE" + CGUtils.newLabel();
           bloque_codigo();
+                        if (buscarReturn && encontradoReturn) // Si ha aparecido un return
+                        {
+                                encontradoReturn_en_else = true;
+                                encontradoReturn = false;
+                        }
+                        else            // Si no se ha encontrado un return 
+                        {
+                                encontradoReturn_en_else = false;
+                        }
+
                         code.addLabel(label);
                         code.addLabel(labelEnd);
           break;
@@ -755,12 +867,18 @@ public class clike implements clikeConstants {
       jj_la1[20] = jj_gen;
       ;
     }
+                if (!buscarElse)
+                        encontradoReturn_en_else = true;
+
+                {if (true) return !buscarReturn || (encontradoReturn_en_else && encontradoReturn_en_if);}
+    throw new Error("Missing return statement in function");
   }
 
   static final public void inst_iteracion() throws ParseException {
-        String labelInit = "INITWHILE"+CGUtils.newLabel();
+        String labelInit = "INITWHILE" + CGUtils.newLabel();
         String labelEnd = "ENDWHILE" + CGUtils.newLabel();
         code.addLabel(labelInit);
+        Boolean habiaReturn = encontradoReturn;
     jj_consume_token(tWHILE);
     jj_consume_token(tAP);
     expresion(false);
@@ -769,6 +887,9 @@ public class clike implements clikeConstants {
     bloque_codigo();
                 code.addInst(OpCode.JMP, labelInit);
                 code.addLabel(labelEnd);
+
+                encontradoReturn = habiaReturn; // Dentro de un while, los returns pueden no suceder
+                returnEnWhile = true;
   }
 
   static final public void bloque_codigo() throws ParseException {
@@ -843,21 +964,29 @@ public class clike implements clikeConstants {
                 Symbol symb = tablaSimbolos.getSymbol(funcName);
                 SymbolFunction simbolFunc = null;
 
-                if (symb == null){
+                if (symb == null)
+                {
                         ErrorSemantico.deteccion("El bloque actual no es una funci\u00f3n o procedimiento", token);
+                        haHabidoError = true;
                 }
                 else {
                         if (symb instanceof SymbolFunction)
                                 simbolFunc = (SymbolFunction) symb;
                         else
+                        {
                                 ErrorSemantico.deteccion("El bloque actual no admite returns", token);
+                                haHabidoError = true;
+                        }
                 }
 
 
                 if (simbolFunc != null && type != simbolFunc.returnType)
                 {
                         ErrorSemantico.deteccion("En return, el tipo de la expresi\u00f3n no coincide con el tipo de retorno de la funci\u00f3n", token);
+                        haHabidoError = true;
                 }
+
+                encontradoReturn = true;
 
                 code.addInst(OpCode.CSF);
                 {if (true) return type;}
@@ -868,7 +997,7 @@ public class clike implements clikeConstants {
         Token token;
         Symbol.Types tipo = null;
         Boolean error = false;
-        ArrayList<Symbol> parameters = new ArrayList();
+        ArrayList<Symbol> parameters = new ArrayList<Symbol>();
         String name = "";
     token = jj_consume_token(tID);
                 try{
@@ -893,11 +1022,13 @@ public class clike implements clikeConstants {
                         else
                         {
                                 ErrorSemantico.deteccion("El identificador " + token.image + " no es una funci\u00f3n ni un procedimiento", token);
+                                haHabidoError = true;
                         }
                 }
                 catch (SymbolNotFoundException e) {
                         error = true;
                         System.out.println(e+", linea "+token.beginLine+", columna "+token.beginColumn);
+                        haHabidoError = true;
                 }
     jj_consume_token(tAP);
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -977,6 +1108,7 @@ public class clike implements clikeConstants {
                         {
                                 ErrorSemantico.deteccion("En operaci\u00f3n l\u00f3gica, los operandos deben ser de tipo Boolean ("+
                                                                                 factor1Type+", "+factor2Type+")");
+                                haHabidoError = true;
                         }
     }
                 if (factor2Type != null)
@@ -1027,6 +1159,7 @@ public class clike implements clikeConstants {
                         {
                                 ErrorSemantico.deteccion("En relacion,los operandos deben ser del mismo tipo ("+
                                                                                 factor1Type+", "+factor2Type+")");
+                                haHabidoError = true;
                         }
 
                         if (token == "==")
@@ -1112,6 +1245,7 @@ public class clike implements clikeConstants {
                         if (factor1Type != factor2Type)
                         {
                                 ErrorSemantico.deteccion("En expresi\u00f3n simple, los operandos deben ser del mismo tipo");
+                                haHabidoError = true;
                         }
 
                         if (token == "+")
@@ -1196,6 +1330,7 @@ public class clike implements clikeConstants {
                         if (factor1Type != factor2Type)
                         {
                                 ErrorSemantico.deteccion("En termino, los operandos deben ser del mismo tipo");
+                                haHabidoError = true;
                         }
 
                         if (token == "*")
@@ -1287,12 +1422,18 @@ public class clike implements clikeConstants {
       symbolType = expresion(false);
       jj_consume_token(tCP);
                         if (sendRef)
+                        {
                                 ErrorSemantico.deteccion("No puede pasarse un valor calculado como referencia");
+                                haHabidoError = true;
+                        }
 
                         if (symbolType == Symbol.Types.INT)
                                 symbolType = Symbol.Types.CHAR;
                         else
+                        {
                                 ErrorSemantico.deteccion("El tipo de la expresi\u00f3n al hacer cast to char debe ser int");
+                                haHabidoError = true;
+                        }
       break;
     case tCHAR2INT:
       jj_consume_token(tCHAR2INT);
@@ -1300,12 +1441,18 @@ public class clike implements clikeConstants {
       symbolType = expresion(false);
       jj_consume_token(tCP);
                         if (sendRef)
+                        {
                                 ErrorSemantico.deteccion("No puede pasarse un valor calculado como referencia");
+                                haHabidoError = true;
+                        }
 
                         if (symbolType == Symbol.Types.CHAR)
                                 symbolType = Symbol.Types.INT;
                         else
+                        {
                                 ErrorSemantico.deteccion("El tipo de la expresi\u00f3n al hacer cast to int debe ser char");
+                                haHabidoError = true;
+                        }
       break;
     default:
       jj_la1[36] = jj_gen;
@@ -1319,6 +1466,7 @@ public class clike implements clikeConstants {
                         if (symbolType != Symbol.Types.INT)
                         {
                                 ErrorSemantico.deteccion("El \u00edndice del array debe ser de tipo int");
+                                haHabidoError = true;
                         }
                         else
                         {
@@ -1327,6 +1475,7 @@ public class clike implements clikeConstants {
                                 if (arr.type != Symbol.Types.ARRAY)
                                 {
                                         ErrorSemantico.deteccion("El identificador " + arr.name + " no es un array, es de tipo " + arr.type);
+                                        haHabidoError = true;
                                 }
                                 else
                                 {
@@ -1510,18 +1659,45 @@ public class clike implements clikeConstants {
     finally { jj_save(6, xla); }
   }
 
+  static private boolean jj_3R_21() {
+    if (jj_scan_token(tVOID)) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_24() {
+    if (jj_scan_token(tACOR)) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_12() {
+    if (jj_3R_16()) return true;
+    if (jj_3R_17()) return true;
+    return false;
+  }
+
   static private boolean jj_3R_20() {
     if (jj_scan_token(tBOOL)) return true;
     return false;
   }
 
-  static private boolean jj_3_4() {
-    if (jj_3R_15()) return true;
+  static private boolean jj_3_7() {
+    if (jj_scan_token(tID)) return true;
+    if (jj_scan_token(tACOR)) return true;
+    return false;
+  }
+
+  static private boolean jj_3_6() {
+    if (jj_3R_14()) return true;
     return false;
   }
 
   static private boolean jj_3R_19() {
     if (jj_scan_token(tCHAR)) return true;
+    return false;
+  }
+
+  static private boolean jj_3_5() {
+    if (jj_3R_15()) return true;
     return false;
   }
 
@@ -1546,63 +1722,6 @@ public class clike implements clikeConstants {
     return false;
   }
 
-  static private boolean jj_3R_17() {
-    if (jj_3R_22()) return true;
-    Token xsp;
-    xsp = jj_scanpos;
-    if (jj_3R_23()) jj_scanpos = xsp;
-    return false;
-  }
-
-  static private boolean jj_3_7() {
-    if (jj_scan_token(tID)) return true;
-    if (jj_scan_token(tACOR)) return true;
-    return false;
-  }
-
-  static private boolean jj_3_6() {
-    if (jj_3R_14()) return true;
-    return false;
-  }
-
-  static private boolean jj_3_5() {
-    if (jj_3R_15()) return true;
-    return false;
-  }
-
-  static private boolean jj_3R_13() {
-    if (jj_3R_16()) return true;
-    if (jj_scan_token(tID)) return true;
-    return false;
-  }
-
-  static private boolean jj_3R_23() {
-    if (jj_scan_token(tCOMMA)) return true;
-    return false;
-  }
-
-  static private boolean jj_3R_24() {
-    if (jj_scan_token(tACOR)) return true;
-    return false;
-  }
-
-  static private boolean jj_3R_12() {
-    if (jj_3R_16()) return true;
-    if (jj_3R_17()) return true;
-    return false;
-  }
-
-  static private boolean jj_3_3() {
-    if (jj_3R_14()) return true;
-    return false;
-  }
-
-  static private boolean jj_3R_14() {
-    if (jj_scan_token(tID)) return true;
-    if (jj_scan_token(tAP)) return true;
-    return false;
-  }
-
   static private boolean jj_3_2() {
     if (jj_3R_13()) return true;
     return false;
@@ -1616,20 +1735,50 @@ public class clike implements clikeConstants {
     return false;
   }
 
-  static private boolean jj_3R_15() {
-    if (jj_scan_token(tELSE)) return true;
-    if (jj_scan_token(tIF)) return true;
-    return false;
-  }
-
   static private boolean jj_3_1() {
     if (jj_3R_12()) return true;
     if (jj_scan_token(tPC)) return true;
     return false;
   }
 
-  static private boolean jj_3R_21() {
-    if (jj_scan_token(tVOID)) return true;
+  static private boolean jj_3_4() {
+    if (jj_3R_15()) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_17() {
+    if (jj_3R_22()) return true;
+    Token xsp;
+    xsp = jj_scanpos;
+    if (jj_3R_23()) jj_scanpos = xsp;
+    return false;
+  }
+
+  static private boolean jj_3_3() {
+    if (jj_3R_14()) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_15() {
+    if (jj_scan_token(tELSE)) return true;
+    if (jj_scan_token(tIF)) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_14() {
+    if (jj_scan_token(tID)) return true;
+    if (jj_scan_token(tAP)) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_13() {
+    if (jj_3R_16()) return true;
+    if (jj_scan_token(tID)) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_23() {
+    if (jj_scan_token(tCOMMA)) return true;
     return false;
   }
 

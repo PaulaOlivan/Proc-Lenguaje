@@ -12,6 +12,8 @@
 package lib.tools.codeGeneration;
 
 import java.util.ArrayList;
+import java.io.FileWriter;
+import java.io.IOException;
 
 import lib.tools.codeGeneration.PCodeInstruction.OpCode;
 
@@ -87,4 +89,16 @@ public class CodeBlock {
 		return code.size() == 0; 
 	}
 	
+	public void writeCodeToFile(String fileName) {
+		// Escribimos el código en un fichero
+
+		try {
+			FileWriter fileWriter = new FileWriter(fileName);
+			fileWriter.write(toString());
+			fileWriter.close();
+		} catch (IOException e) {
+			System.out.println("Error al escribir el fichero de salida");
+			e.printStackTrace();
+		}
+	}
 }

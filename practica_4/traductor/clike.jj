@@ -30,6 +30,10 @@ public class clike {
 
 	protected static SymbolTable tablaSimbolos = new SymbolTable();
 	protected static CodeBlock code = new CodeBlock();
+	protected static boolean encontradoReturn = false;
+	protected static boolean returnEnWhile = false;
+	protected static boolean haHabidoError = false;
+	protected static String outputName;
 	
 	public static void main(String[] args) {
 		clike parser = null;
@@ -39,8 +43,16 @@ public class clike {
 				parser = new clike(System.in);
 			}
 			else {
-				parser = new clike(new java.io.FileInputStream(args[0]));			// 0 puede que sea el nombre del propio ejecutable, cuidado
+				parser = new clike(new java.io.FileInputStream(args[0]));
 			}
+
+			if (args.length < 2) {
+				System.err.println("Error: Debe indicar el nombre del fichero de salida");
+				System.exit(1);
+			}
+
+			outputName = args[1]; 	// Nombre del fichero de salida
+			
 			//Programa es el símbolo inicial de la gramática
 			parser.Programa();
 			//...
@@ -50,13 +62,17 @@ public class clike {
 			System.err.println ("Fichero " + args[0] + " no encontrado.");
 		}
 		catch (TokenMgrError e) {
-			System.err.println("LEX_ERROR: " + e.getMessage());
+			System.err.println("LEX_ERROR: " + e);
+			haHabidoError = true;
 		}
 		catch (ParseException e) {
-			System.err.println("PARSE_ERROR: " + e.getMessage());
+			System.err.println("PARSE_ERROR: " + e);
+			haHabidoError = true;
 		}
 		catch (Exception e) {
-			System.err.println("ERROR: " + e.getMessage());
+			System.err.println("ERROR: " + e);
+			haHabidoError = true;
+
 		}
 	}
 
@@ -291,6 +307,7 @@ SPECIAL_TOKEN : {
 	{
 		System.err.println("ERROR LEXICO: ("+ matchedToken.beginLine + "," + matchedToken.beginColumn + ") :simbolo no reconocido: " + matchedToken);
 		matchedToken.image = " ";
+		//haHabidoError = true;
 	}
 |	< tCOMM: 	"//"(~["\n"])*> {} //Unicamente lo reconocemos pero no lo sacamos por pantalla
 
@@ -307,6 +324,7 @@ void Programa() :
 	}
 	catch (AlreadyDefinedSymbolException e) {
 		System.err.println("ERROR INTERNO, el identificador compiler_temporal_int ya está declarado");
+		haHabidoError = true;
 	}
 }
 {
@@ -314,7 +332,15 @@ void Programa() :
 	< EOF >
 	{
 		code.addInst(OpCode.LVP);
-		System.out.println(code);
+
+		// Escribimos el código en un fichero
+		if (!haHabidoError)
+		{	
+			System.out.println("Compilación finalizada. Se ha generado el fichero " + outputName + ".pcode");
+			code.writeCodeToFile(outputName+".pcode");
+		}
+		else
+			System.err.println("No se ha generado el código por haber errores en el programa");
 	}
 }
 
@@ -455,6 +481,7 @@ void declaracion_func_proc() :
 		else
 		{
 			simbolo = new SymbolFunction(token.image, tipo);
+			encontradoReturn = false;
 		}
 
 		try{
@@ -477,7 +504,6 @@ void declaracion_func_proc() :
 		}
 		
 		Symbol funcSimb = tablaSimbolos.getSymbol(token.image);
-
 		if (funcSimb instanceof SymbolFunction)
 		{
 			SymbolFunction func = (SymbolFunction) funcSimb;
@@ -485,6 +511,7 @@ void declaracion_func_proc() :
 		}
 		else if (funcSimb instanceof SymbolProcedure)
 		{
+			System.out.println("Procedimiento "+funcSimb.name+", parámetros: "+parametros);
 			SymbolProcedure func = (SymbolProcedure) funcSimb;
 			func.setParameters(parametros);
 		}
@@ -492,6 +519,20 @@ void declaracion_func_proc() :
 	bloque_codigo_con_variables()
 	{
 		tablaSimbolos.removeBlock();
+
+		if (tipo != Symbol.Types.VOID && !encontradoReturn)
+		{
+			if (returnEnWhile)
+			{
+				ErrorSemantico.deteccion("Error, los returns en un while no garantizan que la función " + simbolo.name + " termine con return");
+				haHabidoError = true;
+			}
+			else
+			{
+				ErrorSemantico.deteccion("Error, la función " + simbolo.name + " puede no terminar con return");
+				haHabidoError = true;
+			}
+		}
 
 		if (tipo == Symbol.Types.VOID)
 		{
@@ -593,7 +634,10 @@ void inst_leer() :
 		else if (symbolType == Symbol.Types.CHAR)
 			code.addInst(OpCode.RD, 0);
 		else
+		{
 			ErrorSemantico.deteccion("En read(), la variable no es de tipo entero, char o Boolean", null);
+			haHabidoError = true;
+		}
 	}
 	( 
 		< tCOMMA > symbolType = expresion(true)
@@ -603,7 +647,10 @@ void inst_leer() :
 			else if (symbolType == Symbol.Types.CHAR)
 				code.addInst(OpCode.RD, 0);
 			else
+			{
 				ErrorSemantico.deteccion("En read(), la variable no es de tipo entero, char o Boolean", null);
+				haHabidoError = true;
+			}
 		}
 	)*
 	< tCP >
@@ -626,7 +673,10 @@ void inst_leer_linea() :
 		else if (symbolType == Symbol.Types.CHAR)
 			code.addInst(OpCode.RD, 0);
 		else
+		{
 			ErrorSemantico.deteccion("En read(), la variable no es de tipo entero, char o Boolean", null);
+			haHabidoError = true;
+		}
 	}
 	)?
 	( 
@@ -637,7 +687,10 @@ void inst_leer_linea() :
 			else if (symbolType == Symbol.Types.CHAR)
 				code.addInst(OpCode.RD, 0);
 			else
+			{
 				ErrorSemantico.deteccion("En read(), la variable no es de tipo entero, char o Boolean", null);
+				haHabidoError = true;
+			}
 		}	
 	)*
 	< tCP >
@@ -657,7 +710,6 @@ void inst_leer_linea() :
 		code.addInst(OpCode.NEQ);
 		code.addInst(OpCode.JMT, "READLNLOOP" + label);
 		// Añadimos bucle hasta detectar salto de línea
-
 	}
 }
 
@@ -706,12 +758,15 @@ ArrayList<Symbol.Types> argumentos(ArrayList<Symbol> arguments, String name, Int
 {
 	type = expresion(arguments_internal.get(0).parClass == Symbol.ParameterClass.REF) 
 	{ 
-		types.add(type); 
-
+		types.add(type); 		
+		
 		if (arguments_internal.size() > 0)
 			arguments_internal.remove(0);
 		else
+		{
 			ErrorSemantico.deteccion("Hay más argumentos de la cuenta en la llamada a función "+name+", linea: "+line);
+			haHabidoError = true;
+		}
 	} 
 	(
 		< tCOMMA > type = expresion(arguments_internal.get(0).parClass == Symbol.ParameterClass.REF) 
@@ -721,13 +776,17 @@ ArrayList<Symbol.Types> argumentos(ArrayList<Symbol> arguments, String name, Int
 			if (arguments_internal.size() > 0)
 				arguments_internal.remove(0);
 			else
+			{
 				ErrorSemantico.deteccion("Hay más argumentos de la cuenta en la llamada a función "+name+", linea: "+line);
+				haHabidoError = true;
+			}
 		}
 	)*
 	{
 		if (arguments_internal.size() > 0)
 		{
 			ErrorSemantico.deteccion("Hay menos argumentos de la cuenta en la llamada a función "+name+", linea: "+line);
+			haHabidoError = true;
 		}
 		return types;
 	}
@@ -745,6 +804,7 @@ void inst_asignacion() :
 		if (symbolAss != symbolExp)
 		{
 			ErrorSemantico.deteccion("En asignación, la expresión de tipo " + symbolExp + " no coincide con el tipo de la variable: "+symbolAss, token);
+			haHabidoError = true;
 		}
 
 		code.addInst(OpCode.ASG);
@@ -776,6 +836,7 @@ Symbol.Types asignable() :
 			catch(SymbolNotFoundException e)
 			{
 				ErrorSemantico.deteccion("El símbolo " + token.image + " no existe, línea " + token.beginLine);
+				haHabidoError = true;
 			}
 
 			return null;
@@ -785,6 +846,7 @@ Symbol.Types asignable() :
 			if (index != Symbol.Types.INT)
 			{
 				ErrorSemantico.deteccion("En asignación, el índice del vector " + token.image + " no es de tipo entero", token);
+				haHabidoError = true;
 			}
 
 			SymbolArray array = (SymbolArray) tablaSimbolos.getSymbol(token.image);
@@ -808,6 +870,11 @@ void inst_seleccion() :
 {
 	String label;
 	String labelEnd = "ENDCONDITIONAL" + CGUtils.newLabel();
+	Boolean oldReturn = encontradoReturn;	// Para controlar si hay un return dentro del if
+	Boolean buscarReturn = !encontradoReturn;
+	Boolean encontradoReturn_en_if = false;
+	Boolean encontradoReturn_en_if_else = false;
+	Boolean encontradoReturn_en_else = false;
 }
 {
 	< tIF > < tAP > expresion(false) < tCP >
@@ -819,10 +886,20 @@ void inst_seleccion() :
 	{ 
 		code.addInst(OpCode.JMP, labelEnd);
 		code.addLabel(label); 
+
+		if (buscarReturn && encontradoReturn) // Si ha aparecido un return
+		{
+			encontradoReturn_en_if = true;
+			encontradoReturn = false;
+		}
+		else		// Si no se ha encontrado un return 
+		{
+			encontradoReturn_en_if = false;
+		}
 	}
 	(
 		LOOKAHEAD(2)
-		bloque_else_ifs(labelEnd)
+		encontradoReturn_en_if_else = bloque_else_ifs(labelEnd, buscarReturn, true)
 		| 
 		< tELSE > 
 		{
@@ -832,45 +909,89 @@ void inst_seleccion() :
 		{ 
 			code.addLabel(label);
 			code.addLabel(labelEnd);
+
+			if (buscarReturn && encontradoReturn) // Si ha aparecido un return
+			{
+				encontradoReturn_en_else = true;
+				encontradoReturn = false;
+			}
+			else		// Si no se ha encontrado un return 
+			{
+				encontradoReturn_en_else = false;
+			}
 		}
 	)?
+	{
+		encontradoReturn = !buscarReturn || (encontradoReturn_en_if && (encontradoReturn_en_else || encontradoReturn_en_if_else));
+	}
 }
 
-void bloque_else_ifs(String labelEnd):
+Boolean bloque_else_ifs(String labelEnd, Boolean buscarReturn, Boolean buscarElse):
 {
 	String label;
+
+	Boolean oldReturn = encontradoReturn;	// Para controlar si hay un return dentro del if
+	Boolean encontradoReturn_en_if = false;
+	Boolean encontradoReturn_en_else = false;
 }
 {
 	< tELSE > < tIF > < tAP > expresion(false) < tCP > 
 	{
 		label = "ENDELSEIF" + CGUtils.newLabel();
 		code.addInst(OpCode.JMF, label);
-	} 
+	}
 	bloque_codigo() 
 	{
 		code.addInst(OpCode.JMP, labelEnd); 
 		code.addLabel(label); 
+		
+		if (buscarReturn && encontradoReturn) // Si ha aparecido un return
+		{
+			encontradoReturn_en_if = true;
+			encontradoReturn = false;
+		}
+		else		// Si no se ha encontrado un return 
+		{
+			encontradoReturn_en_if = false;
+		}
 	}
 	(
 		LOOKAHEAD(2)
-		bloque_else_ifs(labelEnd)
+		bloque_else_ifs(labelEnd, buscarReturn, false)
 		| < tELSE > 
 		{
 			label = "ENDELSE" + CGUtils.newLabel();
 		} 
 		bloque_codigo() 
 		{ 
+			if (buscarReturn && encontradoReturn) // Si ha aparecido un return
+			{
+				encontradoReturn_en_else = true;
+				encontradoReturn = false;
+			}
+			else		// Si no se ha encontrado un return 
+			{
+				encontradoReturn_en_else = false;
+			}
+
 			code.addLabel(label);
 			code.addLabel(labelEnd);
 		}
 	)?
+	{
+		if (!buscarElse)
+			encontradoReturn_en_else = true;
+
+		return !buscarReturn || (encontradoReturn_en_else && encontradoReturn_en_if);
+	}
 }
 
 void inst_iteracion() :
 {
-	String labelInit = "INITWHILE"+CGUtils.newLabel();
+	String labelInit = "INITWHILE" + CGUtils.newLabel();
 	String labelEnd = "ENDWHILE" + CGUtils.newLabel();
 	code.addLabel(labelInit);
+	Boolean habiaReturn = encontradoReturn;
 }
 {
 	< tWHILE > < tAP > expresion(false) 
@@ -881,6 +1002,9 @@ void inst_iteracion() :
 	{
 		code.addInst(OpCode.JMP, labelInit);
 		code.addLabel(labelEnd);
+
+		encontradoReturn = habiaReturn;	// Dentro de un while, los returns pueden no suceder
+		returnEnWhile = true;
 	}
 }
 
@@ -913,22 +1037,30 @@ Symbol.Types inst_return() :
 		Symbol symb = tablaSimbolos.getSymbol(funcName);
 		SymbolFunction simbolFunc = null;
 
-		if (symb == null){
+		if (symb == null)
+		{
 			ErrorSemantico.deteccion("El bloque actual no es una función o procedimiento", token);
+			haHabidoError = true;
 		}
 		else {
 			if (symb instanceof SymbolFunction)
 				simbolFunc = (SymbolFunction) symb;
 			else
+			{
 				ErrorSemantico.deteccion("El bloque actual no admite returns", token);
+				haHabidoError = true;
+			}
 		}
 
 
 		if (simbolFunc != null && type != simbolFunc.returnType)
 		{
 			ErrorSemantico.deteccion("En return, el tipo de la expresión no coincide con el tipo de retorno de la función", token);
+			haHabidoError = true;
 		}
 		
+		encontradoReturn = true;
+
 		code.addInst(OpCode.CSF);
 		return type;
 	}
@@ -939,7 +1071,7 @@ Symbol.Types inst_invoc_proc() :
 	Token token;
 	Symbol.Types tipo = null;
 	Boolean error = false; 
-	ArrayList<Symbol> parameters = new ArrayList();
+	ArrayList<Symbol> parameters = new ArrayList<Symbol>();
 	String name = "";
 }
 {
@@ -967,11 +1099,13 @@ Symbol.Types inst_invoc_proc() :
 			else
 			{
 				ErrorSemantico.deteccion("El identificador " + token.image + " no es una función ni un procedimiento", token);
+				haHabidoError = true;
 			}
 		}
 		catch (SymbolNotFoundException e) {
 			error = true;
 			System.out.println(e+", linea "+token.beginLine+", columna "+token.beginColumn);
+			haHabidoError = true;
 		}
 	}
 	< tAP >
@@ -1021,6 +1155,7 @@ Symbol.Types expresion(Boolean sendRef) :
 			{
 				ErrorSemantico.deteccion("En operación lógica, los operandos deben ser de tipo Boolean ("+
 										factor1Type+", "+factor2Type+")");
+				haHabidoError = true;
 			}
 		}
 	)*
@@ -1063,6 +1198,7 @@ Symbol.Types relacion(Boolean sendRef) :
 			{
 				ErrorSemantico.deteccion("En relacion,los operandos deben ser del mismo tipo ("+
 										factor1Type+", "+factor2Type+")");
+				haHabidoError = true;
 			}
 			
 			if (token == "==")
@@ -1120,6 +1256,7 @@ Symbol.Types expresion_simple(Boolean sendRef) :
 			if (factor1Type != factor2Type)
 			{
 				ErrorSemantico.deteccion("En expresión simple, los operandos deben ser del mismo tipo");
+				haHabidoError = true;
 			}
 
 			if (token == "+")
@@ -1186,6 +1323,7 @@ Symbol.Types termino(Boolean sendRef) :
 			if (factor1Type != factor2Type)
 			{
 				ErrorSemantico.deteccion("En termino, los operandos deben ser del mismo tipo");
+				haHabidoError = true;
 			}
 
 			if (token == "*")
@@ -1255,22 +1393,34 @@ Symbol.Types primario(Boolean sendRef) :
 		|	< tINT2CHAR > < tAP > symbolType = expresion(false) < tCP >
 		{
 			if (sendRef)
+			{
 				ErrorSemantico.deteccion("No puede pasarse un valor calculado como referencia");
+				haHabidoError = true;
+			}
 			
 			if (symbolType == Symbol.Types.INT)
 				symbolType = Symbol.Types.CHAR;
 			else
+			{
 				ErrorSemantico.deteccion("El tipo de la expresión al hacer cast to char debe ser int");
+				haHabidoError = true;
+			}
 		}
 		|	< tCHAR2INT > < tAP > symbolType = expresion(false) < tCP >
 		{
 			if (sendRef)
+			{
 				ErrorSemantico.deteccion("No puede pasarse un valor calculado como referencia");
+				haHabidoError = true;
+			}
 				
 			if (symbolType == Symbol.Types.CHAR)
 				symbolType = Symbol.Types.INT;
 			else
+			{
 				ErrorSemantico.deteccion("El tipo de la expresión al hacer cast to int debe ser char");
+				haHabidoError = true;
+			}
 		}
 		|	LOOKAHEAD(2) symbolType = inst_invoc_proc()
 		|	LOOKAHEAD(2) token = < tID > < tACOR > symbolType = expresion(sendRef) < tCCOR >
@@ -1278,6 +1428,7 @@ Symbol.Types primario(Boolean sendRef) :
 			if (symbolType != Symbol.Types.INT)
 			{
 				ErrorSemantico.deteccion("El índice del array debe ser de tipo int");
+				haHabidoError = true;
 			}
 			else
 			{
@@ -1286,6 +1437,7 @@ Symbol.Types primario(Boolean sendRef) :
 				if (arr.type != Symbol.Types.ARRAY)
 				{
 					ErrorSemantico.deteccion("El identificador " + arr.name + " no es un array, es de tipo " + arr.type);
+					haHabidoError = true;
 				}
 				else
 				{					

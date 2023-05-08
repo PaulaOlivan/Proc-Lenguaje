@@ -299,9 +299,7 @@ public class clike implements clikeConstants {
                         parametros = new ArrayList<Symbol>();
                 }
 
-                Symbol funcSimb = tablaSimbolos.getSymbol(token.image);
-                System.out.println(funcSimb);
-
+                Symbol funcSimb = simbolo;
                 if (funcSimb instanceof SymbolFunction)
                 {
                         SymbolFunction func = (SymbolFunction) funcSimb;
@@ -309,7 +307,6 @@ public class clike implements clikeConstants {
                 }
                 else if (funcSimb instanceof SymbolProcedure)
                 {
-                        System.out.println("Procedimiento "+funcSimb.name+", par\u00e1metros: "+parametros);
                         SymbolProcedure func = (SymbolProcedure) funcSimb;
                         func.setParameters(parametros);
                 }
@@ -1666,6 +1663,11 @@ public class clike implements clikeConstants {
     return false;
   }
 
+  static private boolean jj_3R_21() {
+    if (jj_scan_token(tVOID)) return true;
+    return false;
+  }
+
   static private boolean jj_3R_12() {
     if (jj_3R_16()) return true;
     if (jj_3R_17()) return true;
@@ -1698,6 +1700,19 @@ public class clike implements clikeConstants {
     return false;
   }
 
+  static private boolean jj_3_2() {
+    if (jj_3R_13()) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_22() {
+    if (jj_scan_token(tID)) return true;
+    Token xsp;
+    xsp = jj_scanpos;
+    if (jj_3R_24()) jj_scanpos = xsp;
+    return false;
+  }
+
   static private boolean jj_3R_16() {
     Token xsp;
     xsp = jj_scanpos;
@@ -1716,19 +1731,6 @@ public class clike implements clikeConstants {
 
   static private boolean jj_3R_18() {
     if (jj_scan_token(tINT)) return true;
-    return false;
-  }
-
-  static private boolean jj_3_2() {
-    if (jj_3R_13()) return true;
-    return false;
-  }
-
-  static private boolean jj_3R_22() {
-    if (jj_scan_token(tID)) return true;
-    Token xsp;
-    xsp = jj_scanpos;
-    if (jj_3R_24()) jj_scanpos = xsp;
     return false;
   }
 
@@ -1776,11 +1778,6 @@ public class clike implements clikeConstants {
 
   static private boolean jj_3R_23() {
     if (jj_scan_token(tCOMMA)) return true;
-    return false;
-  }
-
-  static private boolean jj_3R_21() {
-    if (jj_scan_token(tVOID)) return true;
     return false;
   }
 

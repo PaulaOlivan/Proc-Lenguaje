@@ -503,7 +503,7 @@ void declaracion_func_proc() :
 			parametros = new ArrayList<Symbol>();
 		}
 		
-		Symbol funcSimb = tablaSimbolos.getSymbol(token.image);
+		Symbol funcSimb = simbolo;
 		if (funcSimb instanceof SymbolFunction)
 		{
 			SymbolFunction func = (SymbolFunction) funcSimb;
@@ -511,7 +511,6 @@ void declaracion_func_proc() :
 		}
 		else if (funcSimb instanceof SymbolProcedure)
 		{
-			System.out.println("Procedimiento "+funcSimb.name+", parámetros: "+parametros);
 			SymbolProcedure func = (SymbolProcedure) funcSimb;
 			func.setParameters(parametros);
 		}

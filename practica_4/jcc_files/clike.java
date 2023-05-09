@@ -280,7 +280,7 @@ public class clike implements clikeConstants {
                 }
 
                 tablaSimbolos.insertBlock(token.image);
-                code.addLabel(token.image.toUpperCase());
+                code.addLabel(token.image.toUpperCase().replace("_", ""));
     jj_consume_token(tAP);
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case tBOOL:
@@ -361,7 +361,7 @@ public class clike implements clikeConstants {
                         int arraySize = array.maxInd-array.minInd+1;
                         int nivelRelativo = tablaSimbolos.level - symbol.nivel; //Para saber el desplazamiento restamos el level donde apuntamos menos el nivel al que queremos ir
 
-                        for (int i = 0; i < arraySize; i++)
+                        for (int i = arraySize-1; i >= 0; i--)
                         {
                                 code.addInst(OpCode.SRF, nivelRelativo, (int)array.dir+i);              // Nos apilan el valor de la variable
                                 code.addInst(OpCode.ASGI);
@@ -550,6 +550,7 @@ public class clike implements clikeConstants {
     }
     jj_consume_token(tCP);
                 Symbol simb_bin = tablaSimbolos.getSymbol("compiler_temporal_int");
+
                 String label = CGUtils.newLabel();
                 code.addLabel("READLNLOOP" + label);
 
@@ -604,7 +605,13 @@ public class clike implements clikeConstants {
   static final public void argumentos_escribir() throws ParseException {
         Symbol.Types type;
     type = expresion(false);
-                                  print_argument(type);
+                if (type != Symbol.Types.ARRAY){
+                        print_argument(type);
+                }
+                else{
+                        ErrorSemantico.deteccion("Se est\u00e1 intentando imprimir un vector completo");
+                        haHabidoError = true;
+                }
     label_4:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -617,7 +624,7 @@ public class clike implements clikeConstants {
       }
       jj_consume_token(tCOMMA);
       type = expresion(false);
-                                                                                                print_argument(type);
+                                              print_argument(type);
     }
 
   }
@@ -684,6 +691,7 @@ public class clike implements clikeConstants {
   static final public Symbol.Types asignable() throws ParseException {
         Symbol.Types index = null;
         Token token;
+        SymbolArray array = null;
     token = jj_consume_token(tID);
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case tACOR:
@@ -708,7 +716,6 @@ public class clike implements clikeConstants {
 
                                 {if (true) return simbolo.type;}
                         }
-
                         catch(SymbolNotFoundException e)
                         {
                                 ErrorSemantico.deteccion("El s\u00edmbolo " + token.image + " no existe, l\u00ednea " + token.beginLine);
@@ -725,7 +732,13 @@ public class clike implements clikeConstants {
                                 haHabidoError = true;
                         }
 
-                        SymbolArray array = (SymbolArray) tablaSimbolos.getSymbol(token.image);
+                        try {
+                                array = (SymbolArray) tablaSimbolos.getSymbol(token.image);
+                        }
+                        catch(SymbolNotFoundException e)
+                        {
+                                ErrorSemantico.deteccion("El simbolo "+token.image+" no existe, l\u00ednea "+token.beginLine);
+                        }
 
                         // Cálculo de dirección del indexado, base+index
 
@@ -743,19 +756,26 @@ public class clike implements clikeConstants {
   }
 
   static final public void inst_seleccion() throws ParseException {
-        String label;
+        String label = "ETIQUETANOVALIDA";      ;
         String labelEnd = "ENDCONDITIONAL" + CGUtils.newLabel();
         Boolean oldReturn = encontradoReturn;   // Para controlar si hay un return dentro del if
         Boolean buscarReturn = !encontradoReturn;
         Boolean encontradoReturn_en_if = false;
         Boolean encontradoReturn_en_if_else = false;
         Boolean encontradoReturn_en_else = false;
+        Symbol.Types condicion;
     jj_consume_token(tIF);
     jj_consume_token(tAP);
-    expresion(false);
+    condicion = expresion(false);
     jj_consume_token(tCP);
-                label = "ENDIF" + CGUtils.newLabel();
-                code.addInst(OpCode.JMF, label);
+                if (condicion == Symbol.Types.BOOL){
+                        label = "ENDIF" + CGUtils.newLabel();
+                        code.addInst(OpCode.JMF, label);
+                }
+                else{
+                        ErrorSemantico.deteccion("En la selecci\u00f3n, la condici\u00f3n usada no es de tipo booleano, es de tipo " + condicion);
+                        haHabidoError = true;
+                }
     bloque_codigo();
                 code.addInst(OpCode.JMP, labelEnd);
                 code.addLabel(label);
@@ -777,11 +797,7 @@ public class clike implements clikeConstants {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case tELSE:
           jj_consume_token(tELSE);
-                        label = "ENDELSE" + CGUtils.newLabel();
           bloque_codigo();
-                        code.addLabel(label);
-                        code.addLabel(labelEnd);
-
                         if (buscarReturn && encontradoReturn) // Si ha aparecido un return
                         {
                                 encontradoReturn_en_else = true;
@@ -803,6 +819,7 @@ public class clike implements clikeConstants {
       jj_la1[18] = jj_gen;
       ;
     }
+                code.addLabel(labelEnd);
                 encontradoReturn = !buscarReturn || (encontradoReturn_en_if && (encontradoReturn_en_else || encontradoReturn_en_if_else));
   }
 
@@ -840,7 +857,6 @@ public class clike implements clikeConstants {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case tELSE:
           jj_consume_token(tELSE);
-                        label = "ENDELSE" + CGUtils.newLabel();
           bloque_codigo();
                         if (buscarReturn && encontradoReturn) // Si ha aparecido un return
                         {
@@ -851,9 +867,6 @@ public class clike implements clikeConstants {
                         {
                                 encontradoReturn_en_else = false;
                         }
-
-                        code.addLabel(label);
-                        code.addLabel(labelEnd);
           break;
         default:
           jj_la1[19] = jj_gen;
@@ -866,6 +879,8 @@ public class clike implements clikeConstants {
       jj_la1[20] = jj_gen;
       ;
     }
+                code.addLabel(labelEnd);
+
                 if (!buscarElse)
                         encontradoReturn_en_else = true;
 
@@ -878,17 +893,24 @@ public class clike implements clikeConstants {
         String labelEnd = "ENDWHILE" + CGUtils.newLabel();
         code.addLabel(labelInit);
         Boolean habiaReturn = encontradoReturn;
+        Symbol.Types condicion;
     jj_consume_token(tWHILE);
     jj_consume_token(tAP);
-    expresion(false);
+    condicion = expresion(false);
                 code.addInst(OpCode.JMF, labelEnd);
     jj_consume_token(tCP);
     bloque_codigo();
-                code.addInst(OpCode.JMP, labelInit);
-                code.addLabel(labelEnd);
+                if (condicion == Symbol.Types.BOOL){
+                        code.addInst(OpCode.JMP, labelInit);
+                        code.addLabel(labelEnd);
 
-                encontradoReturn = habiaReturn; // Dentro de un while, los returns pueden no suceder
-                returnEnWhile = true;
+                        encontradoReturn = habiaReturn; // Dentro de un while, los returns pueden no suceder
+                        returnEnWhile = true;
+                }
+                else{
+                        ErrorSemantico.deteccion("En la iteraci\u00f3n, la condici\u00f3n usada no es de tipo booleano, es de tipo " + condicion);
+                        haHabidoError = true;
+                }
   }
 
   static final public void bloque_codigo() throws ParseException {
@@ -957,10 +979,20 @@ public class clike implements clikeConstants {
 
   static final public Symbol.Types inst_return() throws ParseException {
         Symbol.Types type;
-    jj_consume_token(tRETURN);
+        Token token = null;
+        Symbol symb = null;
+    token = jj_consume_token(tRETURN);
     type = expresion(false);
                 String funcName = tablaSimbolos.getBlockName();
-                Symbol symb = tablaSimbolos.getSymbol(funcName);
+
+                try {
+                        symb = tablaSimbolos.getSymbol(funcName);
+                }
+                catch(SymbolNotFoundException e)
+                {
+                        ErrorSemantico.deteccion("El return de la l\u00ednea "+token.beginLine+" no pertenece a ninguna funci\u00f3n");
+                }
+
                 SymbolFunction simbolFunc = null;
 
                 if (symb == null)
@@ -1050,7 +1082,7 @@ public class clike implements clikeConstants {
     }
     jj_consume_token(tCP);
                 if (!error){
-                        code.addOSFInst(tablaSimbolos.getTopDir(), tablaSimbolos.level, name.toUpperCase());
+                        code.addOSFInst(tablaSimbolos.getTopDir(), tablaSimbolos.level, name.toUpperCase().replace("_", ""));
                         {if (true) return tipo;}
                 }
     throw new Error("Missing return statement in function");
@@ -1096,11 +1128,13 @@ public class clike implements clikeConstants {
                         {
                                 code.addInst(OpCode.DUP);
                                 code.addInst(OpCode.JMT, label);
+                                code.addInst(OpCode.POP);
                         }
                         else
                         {
                                 code.addInst(OpCode.DUP);
                                 code.addInst(OpCode.JMF, label);
+                                code.addInst(OpCode.POP);
                         }
       factor2Type = relacion(sendRef);
                         if (factor1Type != Symbol.Types.BOOL || factor2Type!= Symbol.Types.BOOL)
@@ -1409,6 +1443,8 @@ public class clike implements clikeConstants {
   static final public Symbol.Types primario(Boolean sendRef) throws ParseException {
         Token token = null, tokenConst = null;
         Symbol.Types symbolType = null, symbolCastToChar = null, symbolCastToInt = null;
+        Symbol arr = null;
+        Symbol simbolo = null;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case tAP:
       jj_consume_token(tAP);
@@ -1469,7 +1505,13 @@ public class clike implements clikeConstants {
                         }
                         else
                         {
-                                Symbol arr = tablaSimbolos.getSymbol(token.image);
+                                try {
+                                        arr = tablaSimbolos.getSymbol(token.image);
+                                }
+                                catch(SymbolNotFoundException e)
+                                {
+                                        ErrorSemantico.deteccion("El simbolo "+token.image+" no existe, l\u00ednea "+token.beginLine);
+                                }
 
                                 if (arr.type != Symbol.Types.ARRAY)
                                 {
@@ -1498,7 +1540,14 @@ public class clike implements clikeConstants {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case tID:
           token = jj_consume_token(tID);
-                        Symbol simbolo = tablaSimbolos.getSymbol(token.image);
+                        try {
+                                simbolo = tablaSimbolos.getSymbol(token.image);
+                        }
+                        catch(SymbolNotFoundException e)
+                        {
+                                ErrorSemantico.deteccion("El simbolo "+token.image+" no existe, l\u00ednea "+token.beginLine);
+                        }
+
                         symbolType = simbolo.type;
 
                         int nivelRelativo =  tablaSimbolos.level - simbolo.nivel;
@@ -1663,40 +1712,15 @@ public class clike implements clikeConstants {
     return false;
   }
 
-  static private boolean jj_3R_21() {
-    if (jj_scan_token(tVOID)) return true;
-    return false;
-  }
-
   static private boolean jj_3R_12() {
     if (jj_3R_16()) return true;
     if (jj_3R_17()) return true;
     return false;
   }
 
-  static private boolean jj_3R_20() {
-    if (jj_scan_token(tBOOL)) return true;
-    return false;
-  }
-
-  static private boolean jj_3_7() {
+  static private boolean jj_3R_14() {
     if (jj_scan_token(tID)) return true;
-    if (jj_scan_token(tACOR)) return true;
-    return false;
-  }
-
-  static private boolean jj_3_6() {
-    if (jj_3R_14()) return true;
-    return false;
-  }
-
-  static private boolean jj_3R_19() {
-    if (jj_scan_token(tCHAR)) return true;
-    return false;
-  }
-
-  static private boolean jj_3_5() {
-    if (jj_3R_15()) return true;
+    if (jj_scan_token(tAP)) return true;
     return false;
   }
 
@@ -1710,6 +1734,44 @@ public class clike implements clikeConstants {
     Token xsp;
     xsp = jj_scanpos;
     if (jj_3R_24()) jj_scanpos = xsp;
+    return false;
+  }
+
+  static private boolean jj_3R_21() {
+    if (jj_scan_token(tVOID)) return true;
+    return false;
+  }
+
+  static private boolean jj_3_1() {
+    if (jj_3R_12()) return true;
+    if (jj_scan_token(tPC)) return true;
+    return false;
+  }
+
+  static private boolean jj_3_7() {
+    if (jj_scan_token(tID)) return true;
+    if (jj_scan_token(tACOR)) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_20() {
+    if (jj_scan_token(tBOOL)) return true;
+    return false;
+  }
+
+  static private boolean jj_3_6() {
+    if (jj_3R_14()) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_15() {
+    if (jj_scan_token(tELSE)) return true;
+    if (jj_scan_token(tIF)) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_19() {
+    if (jj_scan_token(tCHAR)) return true;
     return false;
   }
 
@@ -1734,17 +1796,6 @@ public class clike implements clikeConstants {
     return false;
   }
 
-  static private boolean jj_3_1() {
-    if (jj_3R_12()) return true;
-    if (jj_scan_token(tPC)) return true;
-    return false;
-  }
-
-  static private boolean jj_3_4() {
-    if (jj_3R_15()) return true;
-    return false;
-  }
-
   static private boolean jj_3R_17() {
     if (jj_3R_22()) return true;
     Token xsp;
@@ -1758,15 +1809,8 @@ public class clike implements clikeConstants {
     return false;
   }
 
-  static private boolean jj_3R_15() {
-    if (jj_scan_token(tELSE)) return true;
-    if (jj_scan_token(tIF)) return true;
-    return false;
-  }
-
-  static private boolean jj_3R_14() {
-    if (jj_scan_token(tID)) return true;
-    if (jj_scan_token(tAP)) return true;
+  static private boolean jj_3_5() {
+    if (jj_3R_15()) return true;
     return false;
   }
 
@@ -1778,6 +1822,11 @@ public class clike implements clikeConstants {
 
   static private boolean jj_3R_23() {
     if (jj_scan_token(tCOMMA)) return true;
+    return false;
+  }
+
+  static private boolean jj_3_4() {
+    if (jj_3R_15()) return true;
     return false;
   }
 

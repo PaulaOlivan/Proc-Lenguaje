@@ -291,7 +291,7 @@ TOKEN : {
 							//System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
 							//System.out.println("constante entera " + "\"" + matchedToken + "\"");
 						}
-|	< tCONST_CHAR:		"\'" ((~["\"" , "\n"]) | "\"\"") "\'" > {
+|	< tCONST_CHAR:		"\'" ((~["\n"]) | "\"\"") "\'" > { //~["\"" , "\n"]
 							//System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
 							//System.out.println("constante char " + "\"" + matchedToken + "\"");
 						}
@@ -492,7 +492,7 @@ void declaracion_func_proc() :
 		}
 
 		tablaSimbolos.insertBlock(token.image);
-		code.addLabel(token.image.toUpperCase());
+		code.addLabel(token.image.toUpperCase().replace("_", ""));
 	}
 	< tAP >
 	(parametros = declaracion_parametros())?
@@ -564,7 +564,7 @@ ArrayList<Symbol> declaracion_parametros() :
 			int arraySize = array.maxInd-array.minInd+1;
 			int nivelRelativo = tablaSimbolos.level - symbol.nivel; //Para saber el desplazamiento restamos el level donde apuntamos menos el nivel al que queremos ir
 			
-			for (int i = 0; i < arraySize; i++)
+			for (int i = arraySize-1; i >= 0; i--)
 			{
 				code.addInst(OpCode.SRF, nivelRelativo, (int)array.dir+i);		// Nos apilan el valor de la variable
 				code.addInst(OpCode.ASGI);
@@ -695,6 +695,7 @@ void inst_leer_linea() :
 	< tCP >
 	{
 		Symbol simb_bin = tablaSimbolos.getSymbol("compiler_temporal_int");
+
 		String label = CGUtils.newLabel();
 		code.addLabel("READLNLOOP" + label);
 
@@ -744,7 +745,17 @@ void argumentos_escribir() :
 	Symbol.Types type;
 }
 {
-	type = expresion(false) { print_argument(type); } (< tCOMMA > type = expresion(false) { print_argument(type);})*
+	type = expresion(false) 
+	{
+		if (type != Symbol.Types.ARRAY){
+			print_argument(type); 
+		}
+		else{
+			ErrorSemantico.deteccion("Se está intentando imprimir un vector completo");
+			haHabidoError = true;
+		}
+	} 
+	(< tCOMMA > type = expresion(false) { print_argument(type);})*
 	{}
 }
 
@@ -814,6 +825,7 @@ Symbol.Types asignable() :
 {
 	Symbol.Types index = null;
 	Token token;
+	SymbolArray array = null;
 }
 {
 	token = < tID > ( < tACOR > index = expresion(false) < tCCOR > )?
@@ -831,7 +843,6 @@ Symbol.Types asignable() :
 				
 				return simbolo.type;
 			}
-
 			catch(SymbolNotFoundException e)
 			{
 				ErrorSemantico.deteccion("El símbolo " + token.image + " no existe, línea " + token.beginLine);
@@ -848,7 +859,13 @@ Symbol.Types asignable() :
 				haHabidoError = true;
 			}
 
-			SymbolArray array = (SymbolArray) tablaSimbolos.getSymbol(token.image);
+			try {
+				array = (SymbolArray) tablaSimbolos.getSymbol(token.image);
+			}
+			catch(SymbolNotFoundException e)
+			{
+				ErrorSemantico.deteccion("El simbolo "+token.image+" no existe, línea "+token.beginLine);
+			}
 
 			// Cálculo de dirección del indexado, base+index
 
@@ -867,19 +884,27 @@ Symbol.Types asignable() :
 
 void inst_seleccion() :
 {
-	String label;
+	String label = "ETIQUETANOVALIDA";	;
 	String labelEnd = "ENDCONDITIONAL" + CGUtils.newLabel();
 	Boolean oldReturn = encontradoReturn;	// Para controlar si hay un return dentro del if
 	Boolean buscarReturn = !encontradoReturn;
 	Boolean encontradoReturn_en_if = false;
 	Boolean encontradoReturn_en_if_else = false;
 	Boolean encontradoReturn_en_else = false;
+	Symbol.Types condicion;
 }
 {
-	< tIF > < tAP > expresion(false) < tCP >
+	< tIF > < tAP > condicion = expresion(false) < tCP >
 	{
-		label = "ENDIF" + CGUtils.newLabel();
-		code.addInst(OpCode.JMF, label);
+		if (condicion == Symbol.Types.BOOL){
+			label = "ENDIF" + CGUtils.newLabel();
+			code.addInst(OpCode.JMF, label);
+		}
+		else{
+			ErrorSemantico.deteccion("En la selección, la condición usada no es de tipo booleano, es de tipo " + condicion);
+			haHabidoError = true;
+		}
+
 	} 
 	bloque_codigo()
 	{ 
@@ -901,14 +926,8 @@ void inst_seleccion() :
 		encontradoReturn_en_if_else = bloque_else_ifs(labelEnd, buscarReturn, true)
 		| 
 		< tELSE > 
-		{
-			label = "ENDELSE" + CGUtils.newLabel();
-		} 
 		bloque_codigo() 
 		{ 
-			code.addLabel(label);
-			code.addLabel(labelEnd);
-
 			if (buscarReturn && encontradoReturn) // Si ha aparecido un return
 			{
 				encontradoReturn_en_else = true;
@@ -921,6 +940,7 @@ void inst_seleccion() :
 		}
 	)?
 	{
+		code.addLabel(labelEnd);
 		encontradoReturn = !buscarReturn || (encontradoReturn_en_if && (encontradoReturn_en_else || encontradoReturn_en_if_else));
 	}
 }
@@ -958,11 +978,8 @@ Boolean bloque_else_ifs(String labelEnd, Boolean buscarReturn, Boolean buscarEls
 		LOOKAHEAD(2)
 		bloque_else_ifs(labelEnd, buscarReturn, false)
 		| < tELSE > 
-		{
-			label = "ENDELSE" + CGUtils.newLabel();
-		} 
 		bloque_codigo() 
-		{ 
+		{
 			if (buscarReturn && encontradoReturn) // Si ha aparecido un return
 			{
 				encontradoReturn_en_else = true;
@@ -972,12 +989,11 @@ Boolean bloque_else_ifs(String labelEnd, Boolean buscarReturn, Boolean buscarEls
 			{
 				encontradoReturn_en_else = false;
 			}
-
-			code.addLabel(label);
-			code.addLabel(labelEnd);
 		}
 	)?
 	{
+		code.addLabel(labelEnd);
+
 		if (!buscarElse)
 			encontradoReturn_en_else = true;
 
@@ -991,19 +1007,26 @@ void inst_iteracion() :
 	String labelEnd = "ENDWHILE" + CGUtils.newLabel();
 	code.addLabel(labelInit);
 	Boolean habiaReturn = encontradoReturn;
+	Symbol.Types condicion;
 }
 {
-	< tWHILE > < tAP > expresion(false) 
+	< tWHILE > < tAP > condicion = expresion(false) 
 	{
 		code.addInst(OpCode.JMF, labelEnd);
 	} 
 	< tCP > bloque_codigo()
 	{
-		code.addInst(OpCode.JMP, labelInit);
-		code.addLabel(labelEnd);
+		if (condicion == Symbol.Types.BOOL){
+			code.addInst(OpCode.JMP, labelInit);
+			code.addLabel(labelEnd);
 
-		encontradoReturn = habiaReturn;	// Dentro de un while, los returns pueden no suceder
-		returnEnWhile = true;
+			encontradoReturn = habiaReturn;	// Dentro de un while, los returns pueden no suceder
+			returnEnWhile = true;
+		}
+		else{
+			ErrorSemantico.deteccion("En la iteración, la condición usada no es de tipo booleano, es de tipo " + condicion);
+			haHabidoError = true;
+		}
 	}
 }
 
@@ -1028,12 +1051,22 @@ void bloque_codigo_con_variables() :
 Symbol.Types inst_return() :
 {
 	Symbol.Types type;
+	Token token = null;
+	Symbol symb = null;
 }
 {
-	< tRETURN > type = expresion(false) 
+	token = < tRETURN > type = expresion(false) 
 	{
 		String funcName = tablaSimbolos.getBlockName();
-		Symbol symb = tablaSimbolos.getSymbol(funcName);
+
+		try {
+			symb = tablaSimbolos.getSymbol(funcName);
+		}
+		catch(SymbolNotFoundException e)
+		{
+			ErrorSemantico.deteccion("El return de la línea "+token.beginLine+" no pertenece a ninguna función");
+		}
+		
 		SymbolFunction simbolFunc = null;
 
 		if (symb == null)
@@ -1112,7 +1145,7 @@ Symbol.Types inst_invoc_proc() :
 	< tCP >
 	{	
 		if (!error){
-			code.addOSFInst(tablaSimbolos.getTopDir(), tablaSimbolos.level, name.toUpperCase());
+			code.addOSFInst(tablaSimbolos.getTopDir(), tablaSimbolos.level, name.toUpperCase().replace("_", ""));
 			return tipo;
 		}
 	}
@@ -1141,11 +1174,13 @@ Symbol.Types expresion(Boolean sendRef) :
 			{
 				code.addInst(OpCode.DUP);
 				code.addInst(OpCode.JMT, label);
+				code.addInst(OpCode.POP);
 			}
 			else
 			{
 				code.addInst(OpCode.DUP);
 				code.addInst(OpCode.JMF, label);
+				code.addInst(OpCode.POP);
 			}
 		} 
 		factor2Type = relacion(sendRef)
@@ -1385,6 +1420,8 @@ Symbol.Types primario(Boolean sendRef) :
 {
 	Token token = null, tokenConst = null;
 	Symbol.Types symbolType = null, symbolCastToChar = null, symbolCastToInt = null;
+	Symbol arr = null;
+	Symbol simbolo = null;
 }
 {
 	(	
@@ -1431,7 +1468,13 @@ Symbol.Types primario(Boolean sendRef) :
 			}
 			else
 			{
-				Symbol arr = tablaSimbolos.getSymbol(token.image);
+				try {
+					arr = tablaSimbolos.getSymbol(token.image);
+				}
+				catch(SymbolNotFoundException e)
+				{
+					ErrorSemantico.deteccion("El simbolo "+token.image+" no existe, línea "+token.beginLine);
+				}
 
 				if (arr.type != Symbol.Types.ARRAY)
 				{
@@ -1459,7 +1502,14 @@ Symbol.Types primario(Boolean sendRef) :
 		}
 		|	token = < tID >
 		{ 
-			Symbol simbolo = tablaSimbolos.getSymbol(token.image);
+			try {
+				simbolo = tablaSimbolos.getSymbol(token.image);
+			}
+			catch(SymbolNotFoundException e)
+			{
+				ErrorSemantico.deteccion("El simbolo "+token.image+" no existe, línea "+token.beginLine);
+			}
+			
 			symbolType = simbolo.type;
 			
 			int nivelRelativo =  tablaSimbolos.level - simbolo.nivel;

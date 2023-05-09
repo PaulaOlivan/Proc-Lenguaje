@@ -1,0 +1,407 @@
+  ENP MAIN
+RAND:
+  SRF  1  4
+  SRF  1  4
+  DRF
+  STC 1103515245
+  TMS
+  STC 12345
+  PLUS
+  ASG
+  SRF  1  4
+  DRF
+  STC 65536
+  DIV
+  SRF  1  5
+  DRF
+  MOD
+  CSF
+SRAND:
+  SRF  0  3
+  ASGI
+  SRF  1  4
+  SRF  0  3
+  DRF
+  ASG
+  CSF
+RANDOMSORT:
+  SRF  0  3
+  ASGI
+  SRF  0 13
+  ASGI
+  SRF  0 12
+  ASGI
+  SRF  0 11
+  ASGI
+  SRF  0 10
+  ASGI
+  SRF  0  9
+  ASGI
+  SRF  0  8
+  ASGI
+  SRF  0  7
+  ASGI
+  SRF  0  6
+  ASGI
+  SRF  0  5
+  ASGI
+  SRF  0  4
+  ASGI
+  SRF  0 16
+  SRF  0  3
+  DRF
+  STC  1
+  SBT
+  ASG
+INITWHILEL5:
+  SRF  0 16
+  DRF
+  STC  0
+  GT
+  JMF ENDWHILEL6
+  SRF  0 15
+  OSF 16  1 RAND
+  SRF  0 16
+  DRF
+  STC  1
+  PLUS
+  MOD
+  ASG
+  SRF  0 14
+  SRF  0 16
+  DRF
+  SRF  0  4
+  PLUS
+  DRF
+  ASG
+  SRF  0 16
+  DRF
+  SRF  0  4
+  PLUS
+  SRF  0 15
+  DRF
+  SRF  0  4
+  PLUS
+  DRF
+  ASG
+  SRF  0 15
+  DRF
+  SRF  0  4
+  PLUS
+  SRF  0 14
+  DRF
+  ASG
+  SRF  0 16
+  SRF  0 16
+  DRF
+  STC  1
+  SBT
+  ASG
+  JMP INITWHILEL5
+ENDWHILEL6:
+  CSF
+CHECKARRAY:
+  SRF  0  3
+  ASGI
+  SRF  0 13
+  ASGI
+  SRF  0 12
+  ASGI
+  SRF  0 11
+  ASGI
+  SRF  0 10
+  ASGI
+  SRF  0  9
+  ASGI
+  SRF  0  8
+  ASGI
+  SRF  0  7
+  ASGI
+  SRF  0  6
+  ASGI
+  SRF  0  5
+  ASGI
+  SRF  0  4
+  ASGI
+  SRF  0 14
+  STC  0
+  ASG
+INITWHILEL19:
+  SRF  0 14
+  DRF
+  SRF  0  3
+  DRF
+  STC  1
+  SBT
+  LT
+  DUP
+  JMF ENDANDORL21
+  POP
+  SRF  0 14
+  DRF
+  SRF  0  4
+  PLUS
+  DRF
+  SRF  0 14
+  DRF
+  STC  1
+  PLUS
+  SRF  0  4
+  PLUS
+  DRF
+  LTE
+ENDANDORL21:
+  JMF ENDWHILEL20
+  SRF  0 14
+  SRF  0 14
+  DRF
+  STC  1
+  PLUS
+  ASG
+  JMP INITWHILEL19
+ENDWHILEL20:
+  SRF  0 14
+  DRF
+  SRF  0  3
+  DRF
+  STC  1
+  SBT
+  EQ
+  JMF ENDIFL27
+  STC  1
+  CSF
+  JMP ENDCONDITIONALL25
+ENDIFL27:
+  STC  0
+  CSF
+ENDCONDITIONALL25:
+MAIN:
+  SRF  0 17
+  STC 10
+  ASG
+  STC  0
+  SRF  0  6
+  PLUS
+  STC  4
+  ASG
+  STC  1
+  SRF  0  6
+  PLUS
+  STC  3
+  ASG
+  STC  2
+  SRF  0  6
+  PLUS
+  STC  6
+  ASG
+  STC  3
+  SRF  0  6
+  PLUS
+  STC  8
+  ASG
+  STC  4
+  SRF  0  6
+  PLUS
+  STC  1
+  ASG
+  STC  5
+  SRF  0  6
+  PLUS
+  STC  2
+  ASG
+  STC  6
+  SRF  0  6
+  PLUS
+  STC 87
+  ASG
+  STC  7
+  SRF  0  6
+  PLUS
+  STC  4
+  ASG
+  STC  8
+  SRF  0  6
+  PLUS
+  STC  7
+  ASG
+  STC  9
+  SRF  0  6
+  PLUS
+  STC  3
+  ASG
+  SRF  0  4
+  STC  1
+  ASG
+  SRF  0  5
+  STC 999999
+  ASG
+  SRF  0 16
+  STC  0
+  ASG
+  STC 85
+  WRT  0
+  STC 110
+  WRT  0
+  STC 115
+  WRT  0
+  STC 111
+  WRT  0
+  STC 114
+  WRT  0
+  STC 116
+  WRT  0
+  STC 101
+  WRT  0
+  STC 100
+  WRT  0
+  STC 32
+  WRT  0
+  STC 97
+  WRT  0
+  STC 114
+  WRT  0
+  STC 114
+  WRT  0
+  STC 97
+  WRT  0
+  STC 121
+  WRT  0
+  STC 58
+  WRT  0
+  STC 10
+  WRT  0
+INITWHILEL55:
+  SRF  0 16
+  DRF
+  SRF  0 17
+  DRF
+  LT
+  JMF ENDWHILEL56
+  SRF  0 16
+  DRF
+  SRF  0  6
+  PLUS
+  DRF
+  WRT  1
+  SRF  0 16
+  SRF  0 16
+  DRF
+  STC  1
+  PLUS
+  ASG
+  JMP INITWHILEL55
+ENDWHILEL56:
+  STC 10
+  WRT  0
+INITWHILEL61:
+  SRF  0  6
+  DRF
+  SRF  0  7
+  DRF
+  SRF  0  8
+  DRF
+  SRF  0  9
+  DRF
+  SRF  0 10
+  DRF
+  SRF  0 11
+  DRF
+  SRF  0 12
+  DRF
+  SRF  0 13
+  DRF
+  SRF  0 14
+  DRF
+  SRF  0 15
+  DRF
+  SRF  0 17
+  DRF
+  OSF 17  0 CHECKARRAY
+  NGB
+  JMF ENDWHILEL62
+  SRF  0  6
+  DRF
+  SRF  0  7
+  DRF
+  SRF  0  8
+  DRF
+  SRF  0  9
+  DRF
+  SRF  0 10
+  DRF
+  SRF  0 11
+  DRF
+  SRF  0 12
+  DRF
+  SRF  0 13
+  DRF
+  SRF  0 14
+  DRF
+  SRF  0 15
+  DRF
+  SRF  0 17
+  DRF
+  OSF 17  0 RANDOMSORT
+  JMP INITWHILEL61
+ENDWHILEL62:
+  STC 83
+  WRT  0
+  STC 111
+  WRT  0
+  STC 114
+  WRT  0
+  STC 116
+  WRT  0
+  STC 101
+  WRT  0
+  STC 100
+  WRT  0
+  STC 32
+  WRT  0
+  STC 97
+  WRT  0
+  STC 114
+  WRT  0
+  STC 114
+  WRT  0
+  STC 97
+  WRT  0
+  STC 121
+  WRT  0
+  STC 58
+  WRT  0
+  STC 10
+  WRT  0
+  SRF  0 16
+  STC  0
+  ASG
+INITWHILEL70:
+  SRF  0 16
+  DRF
+  SRF  0 17
+  DRF
+  LT
+  JMF ENDWHILEL71
+  STC 37
+  WRT  0
+  STC 100
+  WRT  0
+  STC 32
+  WRT  0
+  SRF  0 16
+  DRF
+  SRF  0  6
+  PLUS
+  DRF
+  WRT  1
+  SRF  0 16
+  SRF  0 16
+  DRF
+  STC  1
+  PLUS
+  ASG
+  JMP INITWHILEL70
+ENDWHILEL71:
+  STC 10
+  WRT  0
+  LVP

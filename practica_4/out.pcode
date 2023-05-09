@@ -1,10 +1,7 @@
   ENP MAIN
-FUNC:
-  STC  2
-  CSF
 MAIN:
   SRF  0  4
-  STC 49
+  STC 10
   ASG
   STC 72
   WRT  0
@@ -14,28 +11,25 @@ MAIN:
   WRT  0
   STC 97
   WRT  0
-  STC 58
+  STC  9
   WRT  0
-  STC 34
-  WRT  0
-  STC 34
-  WRT  0
-  STC 32
-  WRT  0
-  STC 113
-  WRT  0
-  STC 117
-  WRT  0
-  STC 101
-  WRT  0
-  STC 32
-  WRT  0
-  STC 116
+  STC 67
   WRT  0
   STC 97
   WRT  0
+  STC 114
+  WRT  0
+  STC 97
+  WRT  0
+  STC 99
+  WRT  0
+  STC 111
+  WRT  0
   STC 108
   WRT  0
-  STC 10
+  STC 97
+  WRT  0
+  SRF  0  4
+  DRF
   WRT  0
   LVP

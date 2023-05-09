@@ -604,14 +604,21 @@ Symbol declaracion_parametro() :
 }
 
 void instruccion() :
-{}
+{
+	Symbol.Types type;
+}
 {
 	inst_leer() < tPC >
 |	inst_leer_linea() < tPC > 
 |	inst_escribir() < tPC > 
 |	inst_escribir_linea() < tPC >
 // Para evitar ambigüedad con invocación de función
-| 	LOOKAHEAD(2) inst_invoc_proc() < tPC > 	
+| 	LOOKAHEAD(2) type = inst_invoc_proc() 
+	{ 
+		if (type != Symbol.Types.VOID)
+			code.addInst(OpCode.POP);	// Si solo se ha llamado a la funcion, elimina su resultado
+	} 
+	< tPC > 	
 |	inst_asignacion() < tPC > 
 |	inst_seleccion()
 |	inst_iteracion()

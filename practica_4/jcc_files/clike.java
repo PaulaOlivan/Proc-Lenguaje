@@ -406,6 +406,7 @@ public class clike implements clikeConstants {
   }
 
   static final public void instruccion() throws ParseException {
+        Symbol.Types type;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case tREAD:
       inst_leer();
@@ -426,7 +427,10 @@ public class clike implements clikeConstants {
     default:
       jj_la1[8] = jj_gen;
       if (jj_2_3(2)) {
-        inst_invoc_proc();
+        type = inst_invoc_proc();
+                if (type != Symbol.Types.VOID)
+                        code.addInst(OpCode.POP);       // Si solo se ha llamado a la funcion, elimina su resultado
+
         jj_consume_token(tPC);
       } else {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -1724,27 +1728,8 @@ public class clike implements clikeConstants {
     return false;
   }
 
-  static private boolean jj_3_2() {
-    if (jj_3R_13()) return true;
-    return false;
-  }
-
-  static private boolean jj_3R_22() {
-    if (jj_scan_token(tID)) return true;
-    Token xsp;
-    xsp = jj_scanpos;
-    if (jj_3R_24()) jj_scanpos = xsp;
-    return false;
-  }
-
   static private boolean jj_3R_21() {
     if (jj_scan_token(tVOID)) return true;
-    return false;
-  }
-
-  static private boolean jj_3_1() {
-    if (jj_3R_12()) return true;
-    if (jj_scan_token(tPC)) return true;
     return false;
   }
 
@@ -1764,6 +1749,19 @@ public class clike implements clikeConstants {
     return false;
   }
 
+  static private boolean jj_3_2() {
+    if (jj_3R_13()) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_22() {
+    if (jj_scan_token(tID)) return true;
+    Token xsp;
+    xsp = jj_scanpos;
+    if (jj_3R_24()) jj_scanpos = xsp;
+    return false;
+  }
+
   static private boolean jj_3R_15() {
     if (jj_scan_token(tELSE)) return true;
     if (jj_scan_token(tIF)) return true;
@@ -1772,6 +1770,12 @@ public class clike implements clikeConstants {
 
   static private boolean jj_3R_19() {
     if (jj_scan_token(tCHAR)) return true;
+    return false;
+  }
+
+  static private boolean jj_3_1() {
+    if (jj_3R_12()) return true;
+    if (jj_scan_token(tPC)) return true;
     return false;
   }
 
@@ -1804,12 +1808,17 @@ public class clike implements clikeConstants {
     return false;
   }
 
+  static private boolean jj_3_5() {
+    if (jj_3R_15()) return true;
+    return false;
+  }
+
   static private boolean jj_3_3() {
     if (jj_3R_14()) return true;
     return false;
   }
 
-  static private boolean jj_3_5() {
+  static private boolean jj_3_4() {
     if (jj_3R_15()) return true;
     return false;
   }
@@ -1822,11 +1831,6 @@ public class clike implements clikeConstants {
 
   static private boolean jj_3R_23() {
     if (jj_scan_token(tCOMMA)) return true;
-    return false;
-  }
-
-  static private boolean jj_3_4() {
-    if (jj_3R_15()) return true;
     return false;
   }
 

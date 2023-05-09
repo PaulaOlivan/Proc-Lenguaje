@@ -12,21 +12,15 @@
 //    }   
 //}
 
-void sum (int &a[2])
+int return1()
 {
-    a[1] = a[0]+a[1];
+    return 1;
 }
 
-bool imprimir(int a)
+int return2()
 {
-    print_ln(a);
-
-    return true;
-}
-
-void pantalla()
-{
-    print_ln("Funciono");
+    return1();
+    return 2;
 }
 
 void main()
@@ -34,15 +28,7 @@ void main()
     int temp;
     int a;
 
-    read(a);
+    a = return2();
 
-    pantalla();
-
-    while (a < 10)
-    {
-        a = a + 1;
-        print(a);
-    }    
-
-    print_ln("Sum: ", a);
+    print_ln("Value: ", a);
 }

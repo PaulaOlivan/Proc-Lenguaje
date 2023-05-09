@@ -44,6 +44,14 @@ SRAND:
 RANDOMSORT:
   SRF  0  3
   ASGI
+  SRF  0  8
+  ASGI
+  SRF  0  7
+  ASGI
+  SRF  0  6
+  ASGI
+  SRF  0  5
+  ASGI
   SRF  0  4
   ASGI
   SRF  0 11
@@ -70,26 +78,22 @@ INITWHILEL10:
   SRF  0 11
   DRF
   SRF  0  4
-  DRF
   PLUS
   DRF
   ASG
   SRF  0 11
   DRF
   SRF  0  4
-  DRF
   PLUS
   SRF  0 10
   DRF
   SRF  0  4
-  DRF
   PLUS
   DRF
   ASG
   SRF  0 10
   DRF
   SRF  0  4
-  DRF
   PLUS
   SRF  0  9
   DRF
@@ -281,6 +285,15 @@ INITWHILEL57:
   NGB
   JMF ENDWHILEL58
   SRF  0  6
+  DRF
+  SRF  0  7
+  DRF
+  SRF  0  8
+  DRF
+  SRF  0  9
+  DRF
+  SRF  0 10
+  DRF
   SRF  0 12
   DRF
   OSF 12  0 RANDOMSORT

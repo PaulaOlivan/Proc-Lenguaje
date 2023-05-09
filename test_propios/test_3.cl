@@ -15,32 +15,31 @@ void sumarMatriz(int matriz[9]) {
 
         j = 0;
         while (j < 3) {
-            suma = suma + matriz[i*j];
+            suma = suma + matriz[j + i*3];
             j = j + 1;
         }
 
         i = i + 1;
     }
 
-    println("La suma de los elementos de la matriz es: ", suma);
+    print_ln("La suma de los elementos de la matriz es: ", suma);
 }
 
-int main() {
-    int matriz[10];
+void main() {
+    int matriz[9];
 
-    matriz[0] = 1;   
-    matriz[2] = 2;
-    matriz[3] = 3;
-    matriz[4] = 4;
-    matriz[5] = 5;
-    matriz[6] = 6;
-    matriz[7] = 7;
-    matriz[8] = 8;
-    matriz[9] = 9;
+    matriz[0] = 1;  
+    matriz[1] = 2;
+    matriz[2] = 3;
+    matriz[3] = 4;
+    matriz[4] = 5;
+    matriz[5] = 6;
+    matriz[6] = 7;
+    matriz[7] = 8;
+    matriz[8] = 9;
+
 
     sumarMatriz(matriz);
-
-    return 0;
 }
 
 

@@ -40,7 +40,9 @@ void main() {
   print_ln ("Este programa pide un número positivo n y calcula fib(n) con la fórmula recursiva fib(n) = fib(n-1) + fib(n-2)");
   print_ln ("A partir de 30 será muy lento por la recursividad.");
   print_ln ("");
+
   dato (n);
+
   i = 1;
   while (i <= n) {
     fib (i, r);

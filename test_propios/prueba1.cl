@@ -17,19 +17,32 @@ void sum (int &a[2])
     a[1] = a[0]+a[1];
 }
 
+bool imprimir(int a)
+{
+    print_ln(a);
+
+    return true;
+}
+
+void pantalla()
+{
+    print_ln("Funciono");
+}
 
 void main()
 {
     int temp;
-    int a[2];
+    int a;
 
-    read_ln(a[0]);
-    read_ln(a[1]);
-    
-    sum(a);
+    read(a);
 
+    pantalla();
 
-    //temp = factorial(temp);
-    //print_ln("Factorial: ", temp);
-    print_ln("Sum: ", a[1]);
+    while (a < 10)
+    {
+        a = a + 1;
+        print(a);
+    }    
+
+    print_ln("Sum: ", a);
 }

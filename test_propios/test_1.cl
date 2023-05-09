@@ -42,7 +42,7 @@ void pedir_profundidad (int& profundidad) {
     
     while (profundidad <= 0){
         print ("Escribe un numero positivo que marcara la profundidad del arbol: ");
-        readln (profundidad);
+        read_ln (profundidad);
 	}
 }
 
@@ -52,7 +52,7 @@ void pedir_bola (int& bola, int profundidad) {
     
     while (bola > nBolas){
         print ("Escribe el numero de bola a localizar y que sea menor o igual al numero de nodos del arbol generado: ");
-        readln (bola);
+        read_ln (bola);
 	}
 }
 
@@ -64,5 +64,5 @@ void main(){
     pedir_bola(bola, profundidad);
 
     dondeEstaLaBolita(profundidad, bola, posicion);
-    println("La bolita esta en el nodo del arbol", posicion);
+    print_ln("La bolita esta en el nodo del arbol", posicion);
 }

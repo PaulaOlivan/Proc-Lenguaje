@@ -14,7 +14,7 @@ public class clike implements clikeConstants {
         protected static CodeBlock code = new CodeBlock();
         protected static boolean encontradoReturn = false;
         protected static boolean returnEnWhile = false;
-        protected static boolean haHabidoError = false;
+        public static boolean haHabidoError = false;
         protected static String outputName;
 
         public static void main(String[] args) {
@@ -1687,6 +1687,9 @@ public class clike implements clikeConstants {
 
                         for (int i = 1; i < chars.length-1; i++)
                         {
+                                if (chars[i] == '"' && chars[i+1] == '"')
+                                        i++; // Solo imprimimos la segunda comilla
+
                                 code.addInst(OpCode.STC, (int)chars[i]);
                                 code.addInst(OpCode.WRT, 0);
                         }

@@ -843,6 +843,7 @@ static void SkipLexicalActions(Token matchedToken)
          image.append(input_stream.GetSuffix(jjimageLen + (lengthOfMatch = jjmatchedPos + 1)));
                 System.err.println("ERROR LEXICO: ("+ matchedToken.beginLine + "," + matchedToken.beginColumn + ") :simbolo no reconocido: " + matchedToken);
                 matchedToken.image = " ";
+                clike.haHabidoError = true;
          break;
       default :
          break;

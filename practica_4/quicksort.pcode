@@ -1,0 +1,931 @@
+  ENP MAIN
+INICIALIZAR:
+  SRF  0  3
+  ASGI
+  SRF  0 23
+  STC  0
+  ASG
+INITWHILEL1:
+  SRF  0 23
+  DRF
+  SRF  1 25
+  DRF
+  LT
+  JMF ENDWHILEL2
+  SRF  0 23
+  DRF
+  SRF  0  3
+  DRF
+  PLUS
+  SRF  1 25
+  DRF
+  SRF  0 23
+  DRF
+  SBT
+  ASG
+  SRF  0 23
+  SRF  0 23
+  DRF
+  STC  1
+  PLUS
+  ASG
+  JMP INITWHILEL1
+ENDWHILEL2:
+  CSF
+MOSTRAR:
+  SRF  0 22
+  ASGI
+  SRF  0 21
+  ASGI
+  SRF  0 20
+  ASGI
+  SRF  0 19
+  ASGI
+  SRF  0 18
+  ASGI
+  SRF  0 17
+  ASGI
+  SRF  0 16
+  ASGI
+  SRF  0 15
+  ASGI
+  SRF  0 14
+  ASGI
+  SRF  0 13
+  ASGI
+  SRF  0 12
+  ASGI
+  SRF  0 11
+  ASGI
+  SRF  0 10
+  ASGI
+  SRF  0  9
+  ASGI
+  SRF  0  8
+  ASGI
+  SRF  0  7
+  ASGI
+  SRF  0  6
+  ASGI
+  SRF  0  5
+  ASGI
+  SRF  0  4
+  ASGI
+  SRF  0  3
+  ASGI
+  SRF  0 23
+  STC  0
+  ASG
+INITWHILEL8:
+  SRF  0 23
+  DRF
+  SRF  1 25
+  DRF
+  LT
+  JMF ENDWHILEL9
+  SRF  0 23
+  DRF
+  SRF  0  3
+  PLUS
+  DRF
+  WRT  1
+  STC 32
+  WRT  0
+  SRF  0 23
+  SRF  0 23
+  DRF
+  STC  1
+  PLUS
+  ASG
+  JMP INITWHILEL8
+ENDWHILEL9:
+  STC 10
+  WRT  0
+  CSF
+INTERCAMBIAR:
+  SRF  0  3
+  ASGI
+  SRF  0  4
+  ASGI
+  STC 105
+  WRT  0
+  STC 58
+  WRT  0
+  STC 32
+  WRT  0
+  SRF  0  4
+  DRF
+  DRF
+  WRT  1
+  STC 32
+  WRT  0
+  STC 106
+  WRT  0
+  STC 58
+  WRT  0
+  STC 32
+  WRT  0
+  SRF  0  3
+  DRF
+  DRF
+  WRT  1
+  STC 10
+  WRT  0
+  SRF  0  5
+  SRF  0  4
+  DRF
+  DRF
+  ASG
+  SRF  0  4
+  DRF
+  SRF  0  3
+  DRF
+  DRF
+  ASG
+  SRF  0  3
+  DRF
+  SRF  0  5
+  DRF
+  ASG
+  STC 105
+  WRT  0
+  STC 58
+  WRT  0
+  STC 32
+  WRT  0
+  SRF  0  4
+  DRF
+  DRF
+  WRT  1
+  STC 32
+  WRT  0
+  STC 106
+  WRT  0
+  STC 58
+  WRT  0
+  STC 32
+  WRT  0
+  SRF  0  3
+  DRF
+  DRF
+  WRT  1
+  STC 10
+  WRT  0
+  CSF
+ORDENAR:
+  SRF  0  3
+  ASGI
+  SRF  0  4
+  ASGI
+  SRF  0  4
+  DRF
+  DRF
+  SRF  0  3
+  DRF
+  DRF
+  GT
+  JMF ENDIFL29
+  SRF  0  4
+  DRF
+  SRF  0  3
+  DRF
+  OSF  4  1 INTERCAMBIAR
+  JMP ENDCONDITIONALL27
+ENDIFL29:
+ENDCONDITIONALL27:
+  CSF
+DIVIDE:
+  SRF  0  3
+  ASGI
+  SRF  0  4
+  ASGI
+  SRF  0  5
+  ASGI
+  SRF  0  6
+  ASGI
+  STC 99
+  WRT  0
+  STC 111
+  WRT  0
+  STC 109
+  WRT  0
+  STC 105
+  WRT  0
+  STC 101
+  WRT  0
+  STC 110
+  WRT  0
+  STC 122
+  WRT  0
+  STC 111
+  WRT  0
+  STC 32
+  WRT  0
+  STC 97
+  WRT  0
+  STC 32
+  WRT  0
+  STC 100
+  WRT  0
+  STC 105
+  WRT  0
+  STC 118
+  WRT  0
+  STC 105
+  WRT  0
+  STC 100
+  WRT  0
+  STC 105
+  WRT  0
+  STC 114
+  WRT  0
+  STC 10
+  WRT  0
+  SRF  0 27
+  SRF  0  5
+  DRF
+  SRF  0  6
+  DRF
+  PLUS
+  DRF
+  ASG
+  SRF  0 26
+  SRF  0  5
+  DRF
+  ASG
+  SRF  0  3
+  DRF
+  SRF  0  4
+  DRF
+  STC  1
+  PLUS
+  ASG
+  SRF  0 26
+  SRF  0 26
+  DRF
+  STC  1
+  PLUS
+  ASG
+INITWHILEL38:
+  SRF  0 26
+  DRF
+  SRF  0  6
+  DRF
+  PLUS
+  DRF
+  SRF  0 27
+  DRF
+  LTE
+  DUP
+  JMF ENDANDORL40
+  POP
+  SRF  0 26
+  DRF
+  SRF  0  4
+  DRF
+  LT
+ENDANDORL40:
+  JMF ENDWHILEL39
+  SRF  0 26
+  SRF  0 26
+  DRF
+  STC  1
+  PLUS
+  ASG
+  JMP INITWHILEL38
+ENDWHILEL39:
+  SRF  0  3
+  DRF
+  SRF  0  3
+  DRF
+  DRF
+  STC  1
+  SBT
+  ASG
+INITWHILEL46:
+  SRF  0  3
+  DRF
+  DRF
+  SRF  0  6
+  DRF
+  PLUS
+  DRF
+  SRF  0 27
+  DRF
+  GT
+  JMF ENDWHILEL47
+  SRF  0  3
+  DRF
+  SRF  0  3
+  DRF
+  DRF
+  STC  1
+  SBT
+  ASG
+  JMP INITWHILEL46
+ENDWHILEL47:
+INITWHILEL51:
+  SRF  0 26
+  DRF
+  SRF  0  3
+  DRF
+  DRF
+  LT
+  JMF ENDWHILEL52
+  SRF  0 26
+  DRF
+  SRF  0  6
+  DRF
+  PLUS
+  SRF  0  3
+  DRF
+  DRF
+  SRF  0  6
+  DRF
+  PLUS
+  OSF 27  1 INTERCAMBIAR
+  SRF  0 26
+  SRF  0 26
+  DRF
+  STC  1
+  PLUS
+  ASG
+INITWHILEL59:
+  SRF  0 26
+  DRF
+  SRF  0  6
+  DRF
+  PLUS
+  DRF
+  SRF  0 27
+  DRF
+  LTE
+  JMF ENDWHILEL60
+  SRF  0 26
+  SRF  0 26
+  DRF
+  STC  1
+  PLUS
+  ASG
+  JMP INITWHILEL59
+ENDWHILEL60:
+  SRF  0  3
+  DRF
+  SRF  0  3
+  DRF
+  DRF
+  STC  1
+  SBT
+  ASG
+INITWHILEL65:
+  SRF  0  3
+  DRF
+  DRF
+  SRF  0  6
+  DRF
+  PLUS
+  DRF
+  SRF  0 27
+  DRF
+  GT
+  JMF ENDWHILEL66
+  SRF  0  3
+  DRF
+  SRF  0  3
+  DRF
+  DRF
+  STC  1
+  SBT
+  ASG
+  JMP INITWHILEL65
+ENDWHILEL66:
+  JMP INITWHILEL51
+ENDWHILEL52:
+  SRF  0  5
+  DRF
+  SRF  0  6
+  DRF
+  PLUS
+  SRF  0  3
+  DRF
+  DRF
+  SRF  0  6
+  DRF
+  PLUS
+  OSF 27  1 INTERCAMBIAR
+  CSF
+QUICKSORT:
+  SRF  0  3
+  ASGI
+  SRF  0  4
+  ASGI
+  SRF  0  5
+  ASGI
+  SRF  0  3
+  DRF
+  SRF  0  4
+  DRF
+  GT
+  JMF ENDIFL76
+  SRF  0  5
+  DRF
+  STC  0
+  PLUS
+  DRF
+  SRF  0  5
+  DRF
+  STC  1
+  PLUS
+  DRF
+  SRF  0  5
+  DRF
+  STC  2
+  PLUS
+  DRF
+  SRF  0  5
+  DRF
+  STC  3
+  PLUS
+  DRF
+  SRF  0  5
+  DRF
+  STC  4
+  PLUS
+  DRF
+  SRF  0  5
+  DRF
+  STC  5
+  PLUS
+  DRF
+  SRF  0  5
+  DRF
+  STC  6
+  PLUS
+  DRF
+  SRF  0  5
+  DRF
+  STC  7
+  PLUS
+  DRF
+  SRF  0  5
+  DRF
+  STC  8
+  PLUS
+  DRF
+  SRF  0  5
+  DRF
+  STC  9
+  PLUS
+  DRF
+  SRF  0  5
+  DRF
+  STC 10
+  PLUS
+  DRF
+  SRF  0  5
+  DRF
+  STC 11
+  PLUS
+  DRF
+  SRF  0  5
+  DRF
+  STC 12
+  PLUS
+  DRF
+  SRF  0  5
+  DRF
+  STC 13
+  PLUS
+  DRF
+  SRF  0  5
+  DRF
+  STC 14
+  PLUS
+  DRF
+  SRF  0  5
+  DRF
+  STC 15
+  PLUS
+  DRF
+  SRF  0  5
+  DRF
+  STC 16
+  PLUS
+  DRF
+  SRF  0  5
+  DRF
+  STC 17
+  PLUS
+  DRF
+  SRF  0  5
+  DRF
+  STC 18
+  PLUS
+  DRF
+  SRF  0  5
+  DRF
+  STC 19
+  PLUS
+  DRF
+  OSF 25  1 MOSTRAR
+  SRF  0  3
+  DRF
+  SRF  0  4
+  DRF
+  SBT
+  STC  1
+  EQ
+  JMF ENDIFL80
+  STC 79
+  WRT  0
+  STC 114
+  WRT  0
+  STC 100
+  WRT  0
+  STC 101
+  WRT  0
+  STC 110
+  WRT  0
+  STC 97
+  WRT  0
+  STC 114
+  WRT  0
+  STC 10
+  WRT  0
+  SRF  0  4
+  DRF
+  SRF  0  5
+  DRF
+  PLUS
+  SRF  0  3
+  DRF
+  SRF  0  5
+  DRF
+  PLUS
+  OSF 25  1 ORDENAR
+  JMP ENDCONDITIONALL78
+ENDIFL80:
+  SRF  0  5
+  DRF
+  SRF  0  4
+  DRF
+  SRF  0  3
+  DRF
+  SRF  0 25
+  OSF 25  1 DIVIDE
+  STC 68
+  WRT  0
+  STC 105
+  WRT  0
+  STC 118
+  WRT  0
+  STC 105
+  WRT  0
+  STC 100
+  WRT  0
+  STC 105
+  WRT  0
+  STC 114
+  WRT  0
+  STC 10
+  WRT  0
+  SRF  0  5
+  DRF
+  STC  0
+  PLUS
+  DRF
+  SRF  0  5
+  DRF
+  STC  1
+  PLUS
+  DRF
+  SRF  0  5
+  DRF
+  STC  2
+  PLUS
+  DRF
+  SRF  0  5
+  DRF
+  STC  3
+  PLUS
+  DRF
+  SRF  0  5
+  DRF
+  STC  4
+  PLUS
+  DRF
+  SRF  0  5
+  DRF
+  STC  5
+  PLUS
+  DRF
+  SRF  0  5
+  DRF
+  STC  6
+  PLUS
+  DRF
+  SRF  0  5
+  DRF
+  STC  7
+  PLUS
+  DRF
+  SRF  0  5
+  DRF
+  STC  8
+  PLUS
+  DRF
+  SRF  0  5
+  DRF
+  STC  9
+  PLUS
+  DRF
+  SRF  0  5
+  DRF
+  STC 10
+  PLUS
+  DRF
+  SRF  0  5
+  DRF
+  STC 11
+  PLUS
+  DRF
+  SRF  0  5
+  DRF
+  STC 12
+  PLUS
+  DRF
+  SRF  0  5
+  DRF
+  STC 13
+  PLUS
+  DRF
+  SRF  0  5
+  DRF
+  STC 14
+  PLUS
+  DRF
+  SRF  0  5
+  DRF
+  STC 15
+  PLUS
+  DRF
+  SRF  0  5
+  DRF
+  STC 16
+  PLUS
+  DRF
+  SRF  0  5
+  DRF
+  STC 17
+  PLUS
+  DRF
+  SRF  0  5
+  DRF
+  STC 18
+  PLUS
+  DRF
+  SRF  0  5
+  DRF
+  STC 19
+  PLUS
+  DRF
+  OSF 25  1 MOSTRAR
+  SRF  0  5
+  DRF
+  SRF  0  4
+  DRF
+  SRF  0 25
+  DRF
+  STC  1
+  SBT
+  OSF 25  1 QUICKSORT
+  SRF  0  5
+  DRF
+  SRF  0 25
+  DRF
+  STC  1
+  PLUS
+  SRF  0  3
+  DRF
+  OSF 25  1 QUICKSORT
+  SRF  1  4
+  SRF  1  4
+  DRF
+  STC  1
+  PLUS
+  ASG
+ENDCONDITIONALL78:
+  JMP ENDCONDITIONALL74
+ENDIFL76:
+ENDCONDITIONALL74:
+  CSF
+MAIN:
+  STC 73
+  WRT  0
+  STC 108
+  WRT  0
+  STC 117
+  WRT  0
+  STC 115
+  WRT  0
+  STC 116
+  WRT  0
+  STC 114
+  WRT  0
+  STC 97
+  WRT  0
+  STC 99
+  WRT  0
+  STC 105
+  WRT  0
+  STC 243
+  WRT  0
+  STC 110
+  WRT  0
+  STC 32
+  WRT  0
+  STC 100
+  WRT  0
+  STC 101
+  WRT  0
+  STC 108
+  WRT  0
+  STC 32
+  WRT  0
+  STC 102
+  WRT  0
+  STC 117
+  WRT  0
+  STC 110
+  WRT  0
+  STC 99
+  WRT  0
+  STC 105
+  WRT  0
+  STC 111
+  WRT  0
+  STC 110
+  WRT  0
+  STC 97
+  WRT  0
+  STC 109
+  WRT  0
+  STC 105
+  WRT  0
+  STC 101
+  WRT  0
+  STC 110
+  WRT  0
+  STC 116
+  WRT  0
+  STC 111
+  WRT  0
+  STC 32
+  WRT  0
+  STC 100
+  WRT  0
+  STC 101
+  WRT  0
+  STC 108
+  WRT  0
+  STC 32
+  WRT  0
+  STC 97
+  WRT  0
+  STC 108
+  WRT  0
+  STC 103
+  WRT  0
+  STC 111
+  WRT  0
+  STC 114
+  WRT  0
+  STC 105
+  WRT  0
+  STC 116
+  WRT  0
+  STC 109
+  WRT  0
+  STC 111
+  WRT  0
+  STC 32
+  WRT  0
+  STC 113
+  WRT  0
+  STC 117
+  WRT  0
+  STC 105
+  WRT  0
+  STC 99
+  WRT  0
+  STC 107
+  WRT  0
+  STC 115
+  WRT  0
+  STC 111
+  WRT  0
+  STC 114
+  WRT  0
+  STC 116
+  WRT  0
+  STC 32
+  WRT  0
+  STC 112
+  WRT  0
+  STC 97
+  WRT  0
+  STC 114
+  WRT  0
+  STC 97
+  WRT  0
+  STC 32
+  WRT  0
+  STC 111
+  WRT  0
+  STC 114
+  WRT  0
+  STC 100
+  WRT  0
+  STC 101
+  WRT  0
+  STC 110
+  WRT  0
+  STC 97
+  WRT  0
+  STC 114
+  WRT  0
+  STC 32
+  WRT  0
+  STC 50
+  WRT  0
+  STC 48
+  WRT  0
+  STC 32
+  WRT  0
+  STC 101
+  WRT  0
+  STC 110
+  WRT  0
+  STC 116
+  WRT  0
+  STC 101
+  WRT  0
+  STC 114
+  WRT  0
+  STC 111
+  WRT  0
+  STC 115
+  WRT  0
+  STC 46
+  WRT  0
+  STC 10
+  WRT  0
+  SRF  0 25
+  STC 20
+  ASG
+  SRF  0  4
+  STC  0
+  ASG
+  SRF  0  5
+  OSF 25  0 INICIALIZAR
+  SRF  0  5
+  STC  0
+  SRF  0 25
+  DRF
+  STC  1
+  SBT
+  OSF 25  0 QUICKSORT
+  STC 10
+  WRT  0
+  STC 73
+  WRT  0
+  STC 116
+  WRT  0
+  STC 101
+  WRT  0
+  STC 114
+  WRT  0
+  STC 97
+  WRT  0
+  STC 99
+  WRT  0
+  STC 105
+  WRT  0
+  STC 111
+  WRT  0
+  STC 110
+  WRT  0
+  STC 101
+  WRT  0
+  STC 115
+  WRT  0
+  STC 58
+  WRT  0
+  STC 32
+  WRT  0
+  SRF  0  4
+  DRF
+  WRT  1
+  STC 10
+  WRT  0
+  LVP

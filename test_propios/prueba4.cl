@@ -1,15 +1,13 @@
-int func(){
-    return 2;
-}
-void pantalla (char a){
-    print_ln(a);
-    return 1;
-}
 
 void main(){
-    char a;
-    a = '1';
+    bool a;
+    bool b;
+    a = true;
+    b = false;
     print_ln("Hola:"" que tal");
 
-    pantalla(a);
+    print_ln("a: ", a);
+    print_ln("b: ", b);
+    print_ln("a*b: ", a*b);
+    print_ln("a+b: ", a+b);
 }

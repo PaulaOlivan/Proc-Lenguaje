@@ -79,10 +79,7 @@ public class clike {
 	
 	public static void print_argument(Symbol.Types type){
 		
-		if (type == Symbol.Types.INT 
-			|| 
-			type == Symbol.Types.BOOL
-			)
+		if (type == Symbol.Types.INT)
 		{
 			code.addInst(OpCode.WRT, 1);
 		}
@@ -93,6 +90,45 @@ public class clike {
 		else if (type == Symbol.Types.STRING)
 		{
 			// Los strings se imprimen conforme se reciben
+		}
+		else if (type == Symbol.Types.BOOL)
+		{
+			String labelFalse = "ImprimirFalse"+CGUtils.newLabel();
+			String labelEnd = "ImprimirBoolEnd"+CGUtils.newLabel();
+
+			code.addInst(OpCode.JMF, labelFalse);
+			code.addInst(OpCode.STC, 't');
+			code.addInst(OpCode.WRT, 0);
+
+			code.addInst(OpCode.STC, 'r');
+			code.addInst(OpCode.WRT, 0);
+
+			code.addInst(OpCode.STC, 'u');
+			code.addInst(OpCode.WRT, 0);
+
+			code.addInst(OpCode.STC, 'e');
+			code.addInst(OpCode.WRT, 0);
+
+			code.addInst(OpCode.JMP, labelEnd);
+
+
+			code.addLabel(labelFalse);
+			code.addInst(OpCode.STC, 'f');
+			code.addInst(OpCode.WRT, 0);
+
+			code.addInst(OpCode.STC, 'a');
+			code.addInst(OpCode.WRT, 0);
+
+			code.addInst(OpCode.STC, 'l');
+			code.addInst(OpCode.WRT, 0);
+
+			code.addInst(OpCode.STC, 's');
+			code.addInst(OpCode.WRT, 0);
+
+			code.addInst(OpCode.STC, 'e');
+			code.addInst(OpCode.WRT, 0);
+
+			code.addLabel(labelEnd);
 		}
 	}
 }
@@ -762,7 +798,18 @@ void argumentos_escribir() :
 			haHabidoError = true;
 		}
 	} 
-	(< tCOMMA > type = expresion(false) { print_argument(type);})*
+	(
+		< tCOMMA > type = expresion(false) 
+		{
+			if (type != Symbol.Types.ARRAY){
+				print_argument(type); 
+			}
+			else{
+				ErrorSemantico.deteccion("Se está intentando imprimir un vector completo");
+				haHabidoError = true;
+			}
+		}
+	)*
 	{}
 }
 
@@ -1466,7 +1513,7 @@ Symbol.Types primario(Boolean sendRef) :
 			}
 		}
 		|	LOOKAHEAD(2) symbolType = inst_invoc_proc()
-		|	LOOKAHEAD(2) token = < tID > < tACOR > symbolType = expresion(sendRef) < tCCOR >
+		|	LOOKAHEAD(2) token = < tID > < tACOR > symbolType = expresion(false) < tCCOR >
 		{
 			if (symbolType != Symbol.Types.INT)
 			{

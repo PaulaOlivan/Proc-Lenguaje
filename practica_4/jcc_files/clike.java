@@ -61,10 +61,7 @@ public class clike implements clikeConstants {
 
         public static void print_argument(Symbol.Types type){
 
-                if (type == Symbol.Types.INT
-                        ||
-                        type == Symbol.Types.BOOL
-                        )
+                if (type == Symbol.Types.INT)
                 {
                         code.addInst(OpCode.WRT, 1);
                 }
@@ -75,6 +72,45 @@ public class clike implements clikeConstants {
                 else if (type == Symbol.Types.STRING)
                 {
                         // Los strings se imprimen conforme se reciben
+                }
+                else if (type == Symbol.Types.BOOL)
+                {
+                        String labelFalse = "ImprimirFalse"+CGUtils.newLabel();
+                        String labelEnd = "ImprimirBoolEnd"+CGUtils.newLabel();
+
+                        code.addInst(OpCode.JMF, labelFalse);
+                        code.addInst(OpCode.STC, 't');
+                        code.addInst(OpCode.WRT, 0);
+
+                        code.addInst(OpCode.STC, 'r');
+                        code.addInst(OpCode.WRT, 0);
+
+                        code.addInst(OpCode.STC, 'u');
+                        code.addInst(OpCode.WRT, 0);
+
+                        code.addInst(OpCode.STC, 'e');
+                        code.addInst(OpCode.WRT, 0);
+
+                        code.addInst(OpCode.JMP, labelEnd);
+
+
+                        code.addLabel(labelFalse);
+                        code.addInst(OpCode.STC, 'f');
+                        code.addInst(OpCode.WRT, 0);
+
+                        code.addInst(OpCode.STC, 'a');
+                        code.addInst(OpCode.WRT, 0);
+
+                        code.addInst(OpCode.STC, 'l');
+                        code.addInst(OpCode.WRT, 0);
+
+                        code.addInst(OpCode.STC, 's');
+                        code.addInst(OpCode.WRT, 0);
+
+                        code.addInst(OpCode.STC, 'e');
+                        code.addInst(OpCode.WRT, 0);
+
+                        code.addLabel(labelEnd);
                 }
         }
 
@@ -628,7 +664,13 @@ public class clike implements clikeConstants {
       }
       jj_consume_token(tCOMMA);
       type = expresion(false);
-                                              print_argument(type);
+                        if (type != Symbol.Types.ARRAY){
+                                print_argument(type);
+                        }
+                        else{
+                                ErrorSemantico.deteccion("Se est\u00e1 intentando imprimir un vector completo");
+                                haHabidoError = true;
+                        }
     }
 
   }
@@ -1500,7 +1542,7 @@ public class clike implements clikeConstants {
       } else if (jj_2_7(2)) {
         token = jj_consume_token(tID);
         jj_consume_token(tACOR);
-        symbolType = expresion(sendRef);
+        symbolType = expresion(false);
         jj_consume_token(tCCOR);
                         if (symbolType != Symbol.Types.INT)
                         {
@@ -1711,17 +1753,6 @@ public class clike implements clikeConstants {
     finally { jj_save(6, xla); }
   }
 
-  static private boolean jj_3R_24() {
-    if (jj_scan_token(tACOR)) return true;
-    return false;
-  }
-
-  static private boolean jj_3R_12() {
-    if (jj_3R_16()) return true;
-    if (jj_3R_17()) return true;
-    return false;
-  }
-
   static private boolean jj_3R_14() {
     if (jj_scan_token(tID)) return true;
     if (jj_scan_token(tAP)) return true;
@@ -1730,6 +1761,17 @@ public class clike implements clikeConstants {
 
   static private boolean jj_3R_21() {
     if (jj_scan_token(tVOID)) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_13() {
+    if (jj_3R_16()) return true;
+    if (jj_scan_token(tID)) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_23() {
+    if (jj_scan_token(tCOMMA)) return true;
     return false;
   }
 
@@ -1749,16 +1791,14 @@ public class clike implements clikeConstants {
     return false;
   }
 
-  static private boolean jj_3_2() {
-    if (jj_3R_13()) return true;
+  static private boolean jj_3R_24() {
+    if (jj_scan_token(tACOR)) return true;
     return false;
   }
 
-  static private boolean jj_3R_22() {
-    if (jj_scan_token(tID)) return true;
-    Token xsp;
-    xsp = jj_scanpos;
-    if (jj_3R_24()) jj_scanpos = xsp;
+  static private boolean jj_3R_12() {
+    if (jj_3R_16()) return true;
+    if (jj_3R_17()) return true;
     return false;
   }
 
@@ -1770,12 +1810,6 @@ public class clike implements clikeConstants {
 
   static private boolean jj_3R_19() {
     if (jj_scan_token(tCHAR)) return true;
-    return false;
-  }
-
-  static private boolean jj_3_1() {
-    if (jj_3R_12()) return true;
-    if (jj_scan_token(tPC)) return true;
     return false;
   }
 
@@ -1800,11 +1834,22 @@ public class clike implements clikeConstants {
     return false;
   }
 
-  static private boolean jj_3R_17() {
-    if (jj_3R_22()) return true;
+  static private boolean jj_3_2() {
+    if (jj_3R_13()) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_22() {
+    if (jj_scan_token(tID)) return true;
     Token xsp;
     xsp = jj_scanpos;
-    if (jj_3R_23()) jj_scanpos = xsp;
+    if (jj_3R_24()) jj_scanpos = xsp;
+    return false;
+  }
+
+  static private boolean jj_3_1() {
+    if (jj_3R_12()) return true;
+    if (jj_scan_token(tPC)) return true;
     return false;
   }
 
@@ -1813,24 +1858,21 @@ public class clike implements clikeConstants {
     return false;
   }
 
-  static private boolean jj_3_3() {
-    if (jj_3R_14()) return true;
-    return false;
-  }
-
   static private boolean jj_3_4() {
     if (jj_3R_15()) return true;
     return false;
   }
 
-  static private boolean jj_3R_13() {
-    if (jj_3R_16()) return true;
-    if (jj_scan_token(tID)) return true;
+  static private boolean jj_3R_17() {
+    if (jj_3R_22()) return true;
+    Token xsp;
+    xsp = jj_scanpos;
+    if (jj_3R_23()) jj_scanpos = xsp;
     return false;
   }
 
-  static private boolean jj_3R_23() {
-    if (jj_scan_token(tCOMMA)) return true;
+  static private boolean jj_3_3() {
+    if (jj_3R_14()) return true;
     return false;
   }
 

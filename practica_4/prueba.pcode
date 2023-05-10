@@ -1,0 +1,115 @@
+  ENP MAIN
+SUMVALOR:
+  SRF  0  3
+  ASGI
+  SRF  0  4
+  ASGI
+  SRF  0  4
+  DRF
+  SRF  0  3
+  DRF
+  DRF
+  PLUS
+  CSF
+SUMREF:
+  SRF  0  3
+  ASGI
+  SRF  0  4
+  ASGI
+  SRF  0  3
+  DRF
+  SRF  0  4
+  DRF
+  OSF  4  1 SUMVALOR
+  CSF
+SUMA:
+  SRF  0  3
+  ASGI
+  SRF  0  4
+  ASGI
+  SRF  0  4
+  DRF
+  DRF
+  SRF  0  3
+  DRF
+  DRF
+  PLUS
+  CSF
+MAIN:
+  STC  0
+  SRF  0  4
+  PLUS
+  STC  5
+  ASG
+  STC  1
+  SRF  0  4
+  PLUS
+  STC  3
+  ASG
+  STC  2
+  SRF  0  4
+  PLUS
+  STC  2
+  ASG
+  STC  3
+  SRF  0  4
+  PLUS
+  STC  4
+  ASG
+  SRF  0  8
+  STC  0
+  SRF  0  4
+  PLUS
+  STC  1
+  SRF  0  4
+  PLUS
+  OSF  8  0 SUMA
+  ASG
+  STC 83
+  WRT  0
+  STC 117
+  WRT  0
+  STC 109
+  WRT  0
+  STC 97
+  WRT  0
+  STC 32
+  WRT  0
+  STC 112
+  WRT  0
+  STC 111
+  WRT  0
+  STC 114
+  WRT  0
+  STC 32
+  WRT  0
+  STC 114
+  WRT  0
+  STC 101
+  WRT  0
+  STC 102
+  WRT  0
+  STC 101
+  WRT  0
+  STC 114
+  WRT  0
+  STC 101
+  WRT  0
+  STC 110
+  WRT  0
+  STC 99
+  WRT  0
+  STC 105
+  WRT  0
+  STC 97
+  WRT  0
+  STC 58
+  WRT  0
+  STC 32
+  WRT  0
+  SRF  0  8
+  DRF
+  WRT  1
+  STC 10
+  WRT  0
+  LVP

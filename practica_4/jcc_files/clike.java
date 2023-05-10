@@ -19,6 +19,7 @@ public class clike implements clikeConstants {
 
         public static void main(String[] args) {
                 clike parser = null;
+                int resultado = -1;
 
                 try {
                         if(args.length == 0) {
@@ -36,7 +37,7 @@ public class clike implements clikeConstants {
                         outputName = args[1];   // Nombre del fichero de salida
 
                         //Programa es el símbolo inicial de la gramática
-                        parser.Programa();
+                        resultado = parser.Programa();
                         //...
                         //System.out.println("***** Análisis terminado con éxito *****");
                 }
@@ -54,8 +55,10 @@ public class clike implements clikeConstants {
                 catch (Exception e) {
                         System.err.println("ERROR: " + e);
                         haHabidoError = true;
-
                 }
+
+                if (resultado != 0)
+                        System.exit(resultado);
         }
 
 
@@ -115,7 +118,7 @@ public class clike implements clikeConstants {
         }
 
 //------------ Símbolo inicial de la gramática. Para análisis léxico no hace falta más
-  static final public void Programa() throws ParseException {
+  static final public int Programa() throws ParseException {
         code.addInst(OpCode.ENP, "MAIN");
 
         Symbol temp_bin = new SymbolInt("compiler_temporal_int");
@@ -149,9 +152,14 @@ public class clike implements clikeConstants {
                 {
                         System.out.println("Compilaci\u00f3n finalizada. Se ha generado el fichero " + outputName + ".pcode");
                         code.writeCodeToFile(outputName+".pcode");
+                        {if (true) return 0;}
                 }
                 else
+                {
                         System.err.println("No se ha generado el c\u00f3digo por haber errores en el programa");
+                        {if (true) return -1;}
+                }
+    throw new Error("Missing return statement in function");
   }
 
   static final public void declaracion() throws ParseException {
@@ -1753,23 +1761,6 @@ public class clike implements clikeConstants {
     finally { jj_save(6, xla); }
   }
 
-  static private boolean jj_3R_14() {
-    if (jj_scan_token(tID)) return true;
-    if (jj_scan_token(tAP)) return true;
-    return false;
-  }
-
-  static private boolean jj_3R_21() {
-    if (jj_scan_token(tVOID)) return true;
-    return false;
-  }
-
-  static private boolean jj_3R_13() {
-    if (jj_3R_16()) return true;
-    if (jj_scan_token(tID)) return true;
-    return false;
-  }
-
   static private boolean jj_3R_23() {
     if (jj_scan_token(tCOMMA)) return true;
     return false;
@@ -1873,6 +1864,23 @@ public class clike implements clikeConstants {
 
   static private boolean jj_3_3() {
     if (jj_3R_14()) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_14() {
+    if (jj_scan_token(tID)) return true;
+    if (jj_scan_token(tAP)) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_21() {
+    if (jj_scan_token(tVOID)) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_13() {
+    if (jj_3R_16()) return true;
+    if (jj_scan_token(tID)) return true;
     return false;
   }
 

@@ -37,6 +37,7 @@ public class clike {
 	
 	public static void main(String[] args) {
 		clike parser = null;
+		int resultado = -1;
 		
 		try {
 			if(args.length == 0) {
@@ -54,7 +55,7 @@ public class clike {
 			outputName = args[1]; 	// Nombre del fichero de salida
 			
 			//Programa es el símbolo inicial de la gramática
-			parser.Programa();
+			resultado = parser.Programa();
 			//...
 			//System.out.println("***** Análisis terminado con éxito *****");
 		}
@@ -72,8 +73,10 @@ public class clike {
 		catch (Exception e) {
 			System.err.println("ERROR: " + e);
 			haHabidoError = true;
-
 		}
+
+		if (resultado != 0)
+			System.exit(resultado);
 	}
 
 	
@@ -350,7 +353,7 @@ SPECIAL_TOKEN : {
 }
 
 //------------ Símbolo inicial de la gramática. Para análisis léxico no hace falta más
-void Programa() : 
+int Programa() : 
 {
 	code.addInst(OpCode.ENP, "MAIN");
 	
@@ -374,9 +377,13 @@ void Programa() :
 		{	
 			System.out.println("Compilación finalizada. Se ha generado el fichero " + outputName + ".pcode");
 			code.writeCodeToFile(outputName+".pcode");
+			return 0;
 		}
 		else
+		{
 			System.err.println("No se ha generado el código por haber errores en el programa");
+			return -1;
+		}
 	}
 }
 

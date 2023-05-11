@@ -4,7 +4,7 @@ void main(){
     bool b;
     a = true;
     b = false;
-    print_ln("Hola:"" que tal"");
+    print_ln("Hola:"" que tal");
 
     print_ln("a: ", a);
     print_ln("b: ", b);

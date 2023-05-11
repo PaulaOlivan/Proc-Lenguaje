@@ -1,6 +1,6 @@
 Compilador clike.jar (V1.0)
 ------------------------------
-Análisis léxico y sintáctico
+Compilador de lenguaje de CLIKE
 
 Autores                 NIP
 Hugo Mateo Trejo        816678
@@ -10,10 +10,12 @@ Paula Oliván Usieto     771938
 Invocar como:
 
 -------------------------------------------------------------
-java -jar clike.jar <fichero_fuente_clike>
+java -jar dist/clike_4.jar <fichero_fuente_clike> <fichero_código_ensamblador>
 -------------------------------------------------------------
 
-Si se invoca sin parámetros, lee la entrada estándar.
+En caso de introducir como fichero_fuente_clike un archivo cuyo código no es correcto, léxica, gramática o semánticamente, se mostrará un mensaje de error 
+y se abortará la compilación. En caso contrario se monstrará el mensaje: "Compilación finalizada. Se ha generado el fichero fichero_código_ensamblador.pcode".
+Este código se podrá ensamblar con la herramienta ensamblador proporcionada en moodle y posteriormente ejecutar con la máquina p disponible en el mismo lugar.
 
 
 Características generales:

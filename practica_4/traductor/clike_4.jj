@@ -1205,6 +1205,12 @@ Symbol.Types inst_invoc_proc() :
 	(argumentos(parameters, name, token.beginLine))?
 	< tCP >
 	{	
+		if (arguments_internal.size() > 0)
+		{
+			ErrorSemantico.deteccion("Hay menos argumentos de la cuenta en la llamada a función "+name+", linea: "+line);
+			haHabidoError = true;
+		}
+		
 		if (!error){
 			code.addOSFInst(tablaSimbolos.getTopDir(), tablaSimbolos.level, name.toUpperCase().replace("_", ""));
 			return tipo;

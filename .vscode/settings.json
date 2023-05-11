@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "*.jj": "java",
+        "*.cl": "c",
+        "random": "c"
+    }
+}

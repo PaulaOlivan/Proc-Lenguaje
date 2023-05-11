@@ -152,6 +152,7 @@ TOKEN : {
 |	< #DIGIT: 	["0"-"9"] >
 |	< #NUMBER:	(<DIGIT>)+ >
 |	< #IDCHAR:	(<LETTER> | <DIGIT> | "_") >
+| 	< #IDINIT:	(<LETTER> | "_")>
 }
 
 TOKEN : {
@@ -334,7 +335,7 @@ TOKEN : {
 							//System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
 							//System.out.println("constante char " + "\"" + matchedToken + "\"");
 						}
-|	< tID:		(<IDCHAR>)+ > {
+|	< tID:				(<IDINIT>)(<IDCHAR>)* > {
 							//System.out.print("(" + matchedToken.beginLine + "," + matchedToken.beginColumn +"):");
 							//System.out.println("identificador " + "\"" + matchedToken + "\"");
 						}
@@ -1165,6 +1166,7 @@ Symbol.Types inst_invoc_proc() :
 	Symbol.Types tipo = null;
 	Boolean error = false; 
 	ArrayList<Symbol> parameters = new ArrayList<Symbol>();
+	ArrayList<Symbol.Types> types = null;
 	String name = "";
 }
 {
@@ -1201,13 +1203,15 @@ Symbol.Types inst_invoc_proc() :
 			haHabidoError = true;
 		}
 	}
+
 	< tAP >
-	(argumentos(parameters, name, token.beginLine))?
+	( types = argumentos(parameters, name, token.beginLine))?
 	< tCP >
 	{	
-		if (arguments_internal.size() > 0)
+
+		if (parameters.size() > 0 && types == null)
 		{
-			ErrorSemantico.deteccion("Hay menos argumentos de la cuenta en la llamada a función "+name+", linea: "+line);
+			ErrorSemantico.deteccion("Hay menos argumentos de la cuenta en la llamada a función "+name+", linea: "+token.beginLine);
 			haHabidoError = true;
 		}
 		
@@ -1642,11 +1646,19 @@ Symbol.Types primario(Boolean sendRef) :
 		}
 		|	tokenConst = < tCONST_INT > 
 		{ 
+			if (sendRef){
+				ErrorSemantico.deteccion("No se puede pasar un valor constante por referencia");
+				haHabidoError = true;
+			}
 			symbolType = Symbol.Types.INT; 
 			code.addInst(OpCode.STC, Integer.valueOf(tokenConst.image));
 		}
 		|	tokenConst = < tCONST_CHAR > 
 		{ 
+			if (sendRef){
+				ErrorSemantico.deteccion("No se puede pasar un valor constante por referencia");
+				haHabidoError = true;
+			}
 			symbolType = Symbol.Types.CHAR; 
 
 			char[] character = tokenConst.image.toCharArray();
@@ -1655,6 +1667,10 @@ Symbol.Types primario(Boolean sendRef) :
 		}
 		|	tokenConst = < tCONST_STRING > 
 		{ 
+			if (sendRef){
+				ErrorSemantico.deteccion("No se puede pasar un valor constante por referencia");
+				haHabidoError = true;
+			}
 			symbolType = Symbol.Types.STRING; 
 
 			// Convierte la cadena a charArray
@@ -1671,11 +1687,19 @@ Symbol.Types primario(Boolean sendRef) :
 		}
 		|	tokenConst = < tTRUE >
 		{ 
+			if (sendRef){
+				ErrorSemantico.deteccion("No se puede pasar un valor constante por referencia");
+				haHabidoError = true;
+			}
 			symbolType = Symbol.Types.BOOL; 
 			code.addInst(OpCode.STC, 1);
 		}
 		|	tokenConst = < tFALSE >
 		{ 
+			if (sendRef){
+				ErrorSemantico.deteccion("No se puede pasar un valor constante por referencia");
+				haHabidoError = true;
+			}
 			symbolType = Symbol.Types.BOOL; 
 			code.addInst(OpCode.STC, 0);
 		}
